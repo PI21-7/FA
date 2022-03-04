@@ -3,9 +3,9 @@ from aiogram.types import ReplyKeyboardRemove, \
     InlineKeyboardMarkup, InlineKeyboardButton
 
 
-answer_start = ReplyKeyboardMarkup(True, True).add("Получить задание!")
+answer_start = ReplyKeyboardMarkup(resize_keyboard=True).add("Получить задание!")
 Inline_Date = InlineKeyboardMarkup(inline_keyboard=True, row_width=3)
-Inline_Date_Bm = InlineKeyboardButton(text='Понедельник 💀', callback_data='Inline_Date_Bm')
+Inline_Date_Bm = InlineKeyboardButton(text='понедельник 💀', callback_data='Inline_Date_Bm')
 Inline_Date_Bt = InlineKeyboardButton(text='Вторник 🤯', callback_data='Inline_Date_Bt')
 Inline_Date_Bwd = InlineKeyboardButton(text='Среда 😒', callback_data='Inline_Date_Bwd')
 Inline_Date_Bth = InlineKeyboardButton(text='Четверг 🤨', callback_data='Inline_Date_Bth')

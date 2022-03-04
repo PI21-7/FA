@@ -19,7 +19,7 @@ async def process_start_command(message: types.Message):
 
 @dp.message_handler(lambda message: message.text == 'Получить задание!')
 async def process_date(message: types.Message):
-	await message.answer("Выбираем дату", reply_markup=Buttons.Inline_Date)
+	await message.answer("*Выбираем дату \n28.02.2022 - 04.03.2022*", parse_mode="markdown", reply_markup=Buttons.Inline_Date)
 
 
 if __name__ == '__main__':
