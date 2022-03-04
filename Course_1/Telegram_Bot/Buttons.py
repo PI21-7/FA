@@ -4,11 +4,15 @@ from aiogram.types import ReplyKeyboardRemove, \
 
 
 answer_start = ReplyKeyboardMarkup(True, True).add("Получить задание!")
-datekeyboard = [
-        [
-            InlineKeyboardButton("Option 1", callback_data='1'),
-            InlineKeyboardButton("Option 2", callback_data='2'),
-        ],
-        [InlineKeyboardButton("Option 3", callback_data='3')],
-    ]
-answer_date = InlineKeyboardMarkup(datekeyboard)
+Inline_Date = InlineKeyboardMarkup(inline_keyboard=True, row_width=3)
+Inline_Date_Bm = InlineKeyboardButton(text='Понедельник 💀', callback_data='Inline_Date_Bm')
+Inline_Date_Bt = InlineKeyboardButton(text='Вторник 🤯', callback_data='Inline_Date_Bt')
+Inline_Date_Bwd = InlineKeyboardButton(text='Среда 😒', callback_data='Inline_Date_Bwd')
+Inline_Date_Bth = InlineKeyboardButton(text='Четверг 🤨', callback_data='Inline_Date_Bth')
+Inline_Date_Bf = InlineKeyboardButton(text='Пятница 🍺', callback_data='Inline_Date_Bf')
+Inline_Date_Sn = InlineKeyboardButton(text='Суббота 😎', callback_data='Inline_Date_Sn')
+Inline_Date_Down = InlineKeyboardButton(text='⏬', callback_data='Inline_Date_Down')
+
+
+Inline_Date.add(Inline_Date_Bm).add(Inline_Date_Bt).add(Inline_Date_Bwd).add(Inline_Date_Bth).add(Inline_Date_Bf)\
+    .add(Inline_Date_Sn).add(Inline_Date_Down)
