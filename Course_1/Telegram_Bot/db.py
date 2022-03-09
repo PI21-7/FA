@@ -1,7 +1,12 @@
 import sqlite3
 
+from typing import List, Tuple, Final
+
 
 class Connections(object):
+    def __init__(self, database: str = 'Homework.db') -> None:
+        self.database: Final = database
+
     @staticmethod
     def safe(func):
         def inside(*args, **kwargs):
@@ -15,9 +20,8 @@ class Connections(object):
 class Database(object):
 
     @Connections.safe
-    def init(self, connection):
+    def init(self, connection: tuple) -> None:
         connection, cursor = connection
-        # Создаем БД
         cursor.execute(
             ''' 
         create table if not exists Homework
@@ -32,7 +36,7 @@ class Database(object):
         connection.commit()
 
     @Connections.safe
-    def add_homework(self, connection, subject_name: str, text: str, date: str) -> None:
+    def add_homework(self, connection: tuple, subject_name: str, text: str, date: str) -> str:
         is_added = self.receive_homework(subject_name=subject_name, date=date)
         if is_added:
             return 'Запись уже присутствует'
@@ -43,7 +47,7 @@ class Database(object):
         return 'Домашнее задание добавлено'
 
     @Connections.safe
-    def receive_homework(self, connection, subject_name: str, date: str) -> str or bool:
+    def receive_homework(self, connection: tuple, subject_name: str, date: str) -> str or List[Tuple[str]]:
         connection, cursor = connection
         answer = cursor.execute(
             '''SELECT text FROM Homework WHERE subject_id = ? and date = ? ''',
@@ -54,13 +58,7 @@ class Database(object):
         return answer[0][0]
 
     @Connections.safe
-    def delete_homework(self, connection, subject_name, date):
+    def delete_homework(self, connection: tuple, subject_name, date) -> None:
         connection, cursor = connection
         cursor.execute('''
         DELETE FROM Homework WHERE subject_id = ? and date = ?;''', (subject_name, date))
-
-
-if __name__ == '__main__':
-    DB = Database()
-    DB.init()
-    print(DB.add_homework(subject_name='Дискретная математика', date='12.03.22', text='ДЗ'))
