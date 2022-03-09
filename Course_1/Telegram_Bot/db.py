@@ -32,26 +32,35 @@ class Database(object):
         connection.commit()
 
     @Connections.safe
-    def add_message(self, connection, subject_name: str, text: str, date: str) -> None:
+    def add_homework(self, connection, subject_name: str, text: str, date: str) -> None:
+        is_added = self.receive_homework(subject_name=subject_name, date=date)
+        if is_added:
+            return 'Запись уже присутствует'
         connection, cursor = connection
-        subject_name = subject_name.lower()
         # Записываем
         cursor.execute('''INSERT INTO Homework (subject_id, date, text) VALUES (?, ?, ?)''', (subject_name, date, text))
         connection.commit()
+        return 'Домашнее задание добавлено'
 
     @Connections.safe
-    def receive_homework(self, connection, subject_name: str, date: str) -> str:
+    def receive_homework(self, connection, subject_name: str, date: str) -> str or bool:
         connection, cursor = connection
-        subject_name = subject_name.lower()
         answer = cursor.execute(
             '''SELECT text FROM Homework WHERE subject_id = ? and date = ? ''',
-            (subject_name, date))
+            (subject_name, date)).fetchall()
         connection.commit()
+        if not answer:
+            return answer
+        return answer[0][0]
 
-        return answer.fetchall()[0][0]
+    @Connections.safe
+    def delete_homework(self, connection, subject_name, date):
+        connection, cursor = connection
+        cursor.execute('''
+        DELETE FROM Homework WHERE subject_id = ? and date = ?;''', (subject_name, date))
 
 
 if __name__ == '__main__':
     DB = Database()
     DB.init()
-    print(DB.receive_homework(subject_name='Алгебра', date='08.03.22'))
+    print(DB.add_homework(subject_name='Дискретная математика', date='12.03.22', text='ДЗ'))
