@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
@@ -46,7 +46,7 @@ async def add_homework(message: types.Message, state: FSMContext):
 	db.add_homework(subject_name=Subject, date=Date, text=Exercise)
 
 
-@dp.callback_query_handler(lambda query: query.data.split('_')[1] == 'Date')
+@dp.callback_query_handler(lambda query: query.data.split('_')[2][0] == 'B')
 async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 	try:
 		async with state.proxy() as data:
@@ -63,8 +63,10 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 		date_to_db = start_date + timedelta(days=days[query.data.split('_')[2]])
 		print(date_to_db)
 		print(query.data.split('_'))
-	except KeyError:
+	except KeyError as e:
+		print(True, e)
 		await process_start_command(query.message)
+
 
 @dp.message_handler(lambda message: message.text == 'Получить задание!',  state="*")
 async def process_date(message: types.Message, state: FSMContext):
@@ -100,8 +102,6 @@ async def callback_up(call: types.CallbackQuery, state: FSMContext):
 		text=f"*Выбираем дату \n{week_definition(date_count)[0]} - {week_definition(date_count)[1]}*",
 		parse_mode="markdown",
 		reply_markup=Buttons.Inline_Date)
-
-
 
 
 if __name__ == '__main__':
