@@ -48,6 +48,17 @@ class Database(object):
         return 'Домашнее задание добавлено'
 
     @Connections.safe
+    def is_available_homework(self, connection: tuple, date: str, data=False):
+        connection, cursor = connection
+        cursor = cursor.execute('''SELECT subject_id, text FROM Homework WHERE date = ?''', (date,)).fetchall()
+        if data:
+            return cursor
+
+        if cursor:
+            return True
+        return False
+
+    @Connections.safe
     def receive_homework(self, connection: tuple, subject_name: str, date: str) -> str or List[Tuple[str]]:
         subject_name = subject_name.lower()
         connection, cursor = connection
