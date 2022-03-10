@@ -31,6 +31,7 @@ async def process_start_command(message: types.Message):
 
 @dp.message_handler(lambda message: message.text == 'Добавить задание', state="*")
 async def process_add_command(message: types.Message):
+	print(message.from_user.username)
 	if message.from_user.username in green_list:
 		await message.answer(
 			text='Вводите домашнее задание в формате:\n*Название предмета  Дата  Задание*',
@@ -68,11 +69,9 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 			'Bf': 4,
 			'BSn': 5
 		}
-		date_to_db = (start_date + timedelta(days=days[query.data.split('_')[2]])).strftime('%d.%m.%Y')
-
+		date_to_db = (start_date + timedelta(days=days[query.data.split('_')[2]])).strftime('%d.%m.%y')
 		if db.is_available_homework(date=date_to_db):
 			available_homework = db.is_available_homework(date=date_to_db, data=True)
-			print(available_homework)
 			__text = str()
 			for num, subject in enumerate(available_homework):
 				__text += f'{str(num + 1)}) ' + subject[0].capitalize() + ': ' + subject[1] + '\n'
@@ -92,6 +91,7 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 
 @dp.message_handler(lambda message: message.text == 'Получить задание!',  state="*")
 async def process_date(message: types.Message, state: FSMContext):
+	print(message.from_user.username)
 	await state.finish()
 	async with state.proxy() as data:
 		data['date_count'] = 0
@@ -102,28 +102,34 @@ async def process_date(message: types.Message, state: FSMContext):
 
 @dp.callback_query_handler(text="Inline_Date_Down")
 async def callback_down(call: types.CallbackQuery, state: FSMContext):
-	async with state.proxy() as data:
-		data['date_count'] += 1
-		date_count = data['date_count']
-	await bot.edit_message_text(
-		chat_id=call.message.chat.id,
-		message_id=call.message.message_id,
-		text=f"*Выбираем дату \n{week_definition(date_count)[0]} - {week_definition(date_count)[1]}*",
-		parse_mode="markdown",
-		reply_markup=Buttons.Inline_Date)
+	try:
+		async with state.proxy() as data:
+			data['date_count'] += 1
+			date_count = data['date_count']
+		await bot.edit_message_text(
+			chat_id=call.message.chat.id,
+			message_id=call.message.message_id,
+			text=f"*Выбираем дату \n{week_definition(date_count)[0]} - {week_definition(date_count)[1]}*",
+			parse_mode="markdown",
+			reply_markup=Buttons.Inline_Date)
+	except KeyError:
+		pass
 
 
 @dp.callback_query_handler(text="Inline_Date_Up")
 async def callback_up(call: types.CallbackQuery, state: FSMContext):
-	async with state.proxy() as data:
-		data['date_count'] -= 1
-		date_count = data['date_count']
-	await bot.edit_message_text(
-		chat_id=call.message.chat.id,
-		message_id=call.message.message_id,
-		text=f"*Выбираем дату \n{week_definition(date_count)[0]} - {week_definition(date_count)[1]}*",
-		parse_mode="markdown",
-		reply_markup=Buttons.Inline_Date)
+	try:
+		async with state.proxy() as data:
+			data['date_count'] -= 1
+			date_count = data['date_count']
+		await bot.edit_message_text(
+			chat_id=call.message.chat.id,
+			message_id=call.message.message_id,
+			text=f"*Выбираем дату \n{week_definition(date_count)[0]} - {week_definition(date_count)[1]}*",
+			parse_mode="markdown",
+			reply_markup=Buttons.Inline_Date)
+	except KeyError:
+		pass
 
 
 if __name__ == '__main__':
