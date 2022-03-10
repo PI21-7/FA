@@ -38,6 +38,7 @@ class Database(object):
     @Connections.safe
     def add_homework(self, connection: tuple, subject_name: str, text: str, date: str) -> str:
         is_added = self.receive_homework(subject_name=subject_name, date=date)
+        subject_name = subject_name.lower()
         if is_added:
             return 'Запись уже присутствует'
         connection, cursor = connection
@@ -48,6 +49,7 @@ class Database(object):
 
     @Connections.safe
     def receive_homework(self, connection: tuple, subject_name: str, date: str) -> str or List[Tuple[str]]:
+        subject_name = subject_name.lower()
         connection, cursor = connection
         answer = cursor.execute(
             '''SELECT text FROM Homework WHERE subject_id = ? and date = ? ''',
