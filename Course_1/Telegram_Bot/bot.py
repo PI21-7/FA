@@ -1,4 +1,6 @@
+
 from datetime import timedelta
+
 
 import aiogram.utils.exceptions
 from aiogram import Bot, types
@@ -23,7 +25,6 @@ storage = MemoryStorage()
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=storage)
 db = Database()
-db.init()
 
 
 @dp.message_handler(commands=['start'], state="*")
@@ -65,15 +66,17 @@ async def add_homework(message: types.Message, state: FSMContext):
 	text = message.text.split()
 	print(message.from_user.username, 'добавил:\n', text)
 	if len(text) < 3:
-		await message.answer_sticker(
-			sticker='CAACAgIAAxkBAAEEG8tiKmg5eYEXkwmoASjFQzg8lkVFIgACOQADoodKCwHC3eV1zPToIwQ'
-		)
+		await message.answer(text='*Что?*🤨', parse_mode='markdown')
 		await state.finish()
 		return
 	Subject, Date, Exercise = text[0], text[1], ' '.join(text[2:])
 	await message.answer(
 		text='*{}*'.format(
-			db.add_homework(subject_name=Subject, date=Date, text=Exercise)), parse_mode='markdown')
+			db.add_homework(
+				subject_name=Subject,
+				date=Date, text=Exercise,
+				username=message.from_user.username)),
+		parse_mode='markdown')
 	try:
 		await bot.delete_message(message.chat.id, message_id=message.message_id - 1)
 	except aiogram.utils.exceptions.MessageToDeleteNotFound:
@@ -86,7 +89,7 @@ async def edit_init(call: types.CallbackQuery):
 	await bot.edit_message_text(
 		chat_id=call.message.chat.id,
 		message_id=call.message.message_id,
-		text=f"*Введите предмет и дату для редактирования*",
+		text=f"*Введите предмет и дату для редактирования в формате:\nНазвание предмета  Дата(Д.М.Г)*",
 		parse_mode="markdown",
 	)
 
@@ -94,7 +97,7 @@ async def edit_init(call: types.CallbackQuery):
 @dp.message_handler(state=SelfState.Edit_state)
 async def edit_homework(message: types.Message, state: FSMContext):
 	text = message.text.split()
-	if len(text) < 2:
+	if len(text) < 2 or all(map(lambda x: len(x) > 3, text)):
 		await message.answer_sticker(sticker='CAACAgIAAxkBAAEEG9BiKojK_SZBFl_KqTqswln3CM1ptQAC7xMAApJeSUuQKkME9nIP_SME')
 		return 0
 	Subject, Date = text[0], text[1]
@@ -155,7 +158,6 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 			)
 
 	except KeyError:
-		print(True)
 		await process_start_command(query.message)
 
 
@@ -168,6 +170,44 @@ async def process_date(message: types.Message, state: FSMContext):
 	await message.answer(
 		f"*Выбираем дату \n{week_definition(0)[0]} - {week_definition(0)[1]}*",
 		parse_mode="markdown", reply_markup=Buttons.Inline_Date)
+
+
+@dp.callback_query_handler(text='Inline_Date_Week')
+async def all_week_homework(call: types.CallbackQuery, state: FSMContext):
+	try:
+		async with state.proxy() as data:
+			date_count = data['date_count']
+		start_date = week_definition(date_count, debug=True)
+		days_of_week = {
+			1: 'Понедельник',
+			2: 'Вторник',
+			3: 'Среда',
+			4: 'Четверг',
+			5: 'Пятница',
+			6: 'Суббота'
+		}
+		for day in range(6):
+			current_day = (start_date + timedelta(days=day)).strftime('%d.%m.%Y')
+			available_homework = db.is_available_homework_by_date(date=current_day, data=True)
+			__text = ''
+
+			try:
+				await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+			except aiogram.utils.exceptions.MessageToDeleteNotFound:
+				print('Какое-то сообщение не удаляется(')
+
+			for num, subject in enumerate(available_homework):
+				__text += \
+					f'{str(num + 1)}) ' + subject[0].capitalize() + ': ' + subject[1] + '\n'
+			if not __text:
+				__text = '*Никто не заполнил домашние задания на этот день* 😭'
+			else:
+				__text = '`' + __text + '`'
+			await call.message.answer(
+				text=f'*📅 {days_of_week[day + 1]} {current_day} 📅*\n{__text}',
+				parse_mode='markdown')
+	except KeyError:
+		await process_start_command(call.message)
 
 
 @dp.callback_query_handler(text="Inline_Date_Down")

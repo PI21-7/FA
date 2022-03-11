@@ -1,16 +1,15 @@
 import sqlite3
 
-from typing import List, Tuple, Final
+from typing import List, Tuple
 
 
 class Connections(object):
-    def __init__(self, database: str = 'Homework.db') -> None:
-        self.database: Final = database
+    database = 'Homework.db'
 
     @staticmethod
     def safe(func):
         def inside(*args, **kwargs):
-            with sqlite3.connect('Homework.db') as connection:
+            with sqlite3.connect(Connections.database) as connection:
                 result = func(*args, connection=(connection, connection.cursor()), **kwargs)
                 return result
 
@@ -20,30 +19,27 @@ class Connections(object):
 class Database(object):
 
     @Connections.safe
-    def init(self, connection: tuple) -> None:
+    def init(self, connection: tuple, name: str = 'Homework') -> None:
         connection, cursor = connection
         cursor.execute(
-            ''' 
-        create table if not exists Homework
-        (   id         INTEGER primary key,
-            subject_id int  not null,
-            date       text not null,
-            text       TEXT not null
-        )
-            '''
-        )
+            f'create table if not exists {name}('
+            f'id     INTEGER primary key,'
+            f'subject_id int  not null,'
+            f'date       text not null,'
+            f'text       TEXT not null)')
 
         connection.commit()
 
     @Connections.safe
-    def add_homework(self, connection: tuple, subject_name: str, text: str, date: str) -> str:
+    def add_homework(self, connection: tuple, subject_name: str, text: str, date: str, username: str) -> str:
         is_added = self.receive_homework(subject_name=subject_name, date=date)
         subject_name = subject_name.lower()
         if is_added:
             return 'Запись уже присутствует'
         connection, cursor = connection
         # Записываем
-        cursor.execute('''INSERT INTO Homework (subject_id, date, text) VALUES (?, ?, ?)''', (subject_name, date, text))
+        cursor.execute('''INSERT INTO Homework (subject_id, date, text, Author) VALUES (?, ?, ?, ?)''',
+                       (subject_name, date, text, username))
         connection.commit()
         return 'Домашнее задание добавлено'
 
