@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+import aiogram.utils.exceptions
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
@@ -15,6 +16,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 class SelfState(StatesGroup):
 	Add_state = State()
+	Edit_state = State()
 
 
 storage = MemoryStorage()
@@ -26,33 +28,94 @@ db.init()
 
 @dp.message_handler(commands=['start'], state="*")
 async def process_start_command(message: types.Message):
-	await message.answer("Привет! Нажми на кнопку чтобы получить домашнее задание.", reply_markup=Buttons.answer_start)
+	await message.answer("Привет! Нажми на кнопку, чтобы получить домашнее задание.", reply_markup=Buttons.answer_start)
 
 
-@dp.message_handler(lambda message: message.text == 'Добавить задание', state="*")
-async def process_add_command(message: types.Message):
-	print(message.from_user.username)
+@dp.message_handler(lambda message: message.text == 'Управление заданиями', state="*")
+async def process_add_command(message: types.Message, state: FSMContext):
+	await state.finish()
+	print(message.from_user.username, 'управляет заданиями')
 	if message.from_user.username in green_list:
 		await message.answer(
-			text='Вводите домашнее задание в формате:\n*Название предмета  Дата  Задание*',
-			parse_mode='markdown'
+			text='*Что будем делать?*',
+			parse_mode='markdown',
+			reply_markup=Buttons.Inline_Manage
 		)
-		await SelfState.Add_state.set()
 
 	else:
 		await message.answer(
-			text='*Вы не можете добавлять задания, для получения возможности → @Nps_rf или @monotank*', parse_mode='markdown')
+			text='*Вы не можете управлять заданиями, для получения возможности → @Nps_rf или @monotank*',
+			parse_mode='markdown')
+
+
+@dp.callback_query_handler(text='Inline_Add')
+async def add_homework_state(call: types.CallbackQuery):
+	await SelfState.Add_state.set()
+	await bot.edit_message_text(
+		chat_id=call.message.chat.id,
+		message_id=call.message.message_id,
+		text=f"Вводите домашнее задание в формате:\n*Название предмета  Дата  Задание*",
+		parse_mode="markdown",
+	)
 
 
 @dp.message_handler(state=SelfState.Add_state)
 async def add_homework(message: types.Message, state: FSMContext):
 	await state.finish()
 	text = message.text.split()
+	print(message.from_user.username, 'добавил:\n', text)
+	if len(text) < 3:
+		await message.answer_sticker(
+			sticker='CAACAgIAAxkBAAEEG8tiKmg5eYEXkwmoASjFQzg8lkVFIgACOQADoodKCwHC3eV1zPToIwQ'
+		)
+		await state.finish()
+		return
 	Subject, Date, Exercise = text[0], text[1], ' '.join(text[2:])
 	await message.answer(
-		text='*{}*'.format(db.add_homework(subject_name=Subject, date=Date, text=Exercise)),
-		parse_mode='markdown')
-	await bot.delete_message(message.chat.id, message_id=message.message_id - 1)
+		text='*{}*'.format(
+			db.add_homework(subject_name=Subject, date=Date, text=Exercise)), parse_mode='markdown')
+	try:
+		await bot.delete_message(message.chat.id, message_id=message.message_id - 1)
+	except aiogram.utils.exceptions.MessageToDeleteNotFound:
+		print('Какое-то сообщение не удаляется(')
+
+
+@dp.callback_query_handler(text='Inline_Edit')
+async def edit_init(call: types.CallbackQuery):
+	await SelfState.Edit_state.set()
+	await bot.edit_message_text(
+		chat_id=call.message.chat.id,
+		message_id=call.message.message_id,
+		text=f"*Введите предмет и дату для редактирования*",
+		parse_mode="markdown",
+	)
+
+
+@dp.message_handler(state=SelfState.Edit_state)
+async def edit_homework(message: types.Message, state: FSMContext):
+	text = message.text.split()
+	if len(text) < 2:
+		await message.answer_sticker(sticker='CAACAgIAAxkBAAEEG9BiKojK_SZBFl_KqTqswln3CM1ptQAC7xMAApJeSUuQKkME9nIP_SME')
+		return 0
+	Subject, Date = text[0], text[1]
+	if db.is_exists(date=Date, subject_name=Subject):
+		print(message.from_user.username, 'отредактировал:\n', text)
+		await bot.edit_message_text(
+			chat_id=message.chat.id,
+			message_id=message.message_id - 1,
+			text=f"Введите данные для изменения в формате:\n*Название Предмета  Дата  Задание*",
+			parse_mode="markdown",
+		)
+		await bot.delete_message(
+			chat_id=message.chat.id,
+			message_id=message.message_id
+		)
+		db.delete_homework(subject_name=Subject, date=Date)
+		await state.finish()
+		await SelfState.Add_state.set()
+	else:
+		await message.answer(text='*Такой записи не существует!*', parse_mode='markdown')
+		await state.finish()
 
 
 @dp.callback_query_handler(lambda query: query.data.split('_')[2][0] == 'B')
@@ -69,29 +132,36 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 			'Bf': 4,
 			'BSn': 5
 		}
-		date_to_db = (start_date + timedelta(days=days[query.data.split('_')[2]])).strftime('%d.%m.%y')
-		if db.is_available_homework(date=date_to_db):
-			available_homework = db.is_available_homework(date=date_to_db, data=True)
+		date_to_db = [
+			(start_date + timedelta(days=days[query.data.split('_')[2]])).strftime('%d.%m.%y'),
+			(start_date + timedelta(days=days[query.data.split('_')[2]])).strftime('%d.%m.%Y')]
+		if db.is_available_homework_by_date(date=date_to_db[0]) or db.is_available_homework_by_date(date=date_to_db[1]):
+			date_to_db = date_to_db[0] if db.is_available_homework_by_date(date=date_to_db[0]) else date_to_db[1]
+			available_homework = db.is_available_homework_by_date(date=date_to_db, data=True)
 			__text = str()
 			for num, subject in enumerate(available_homework):
 				__text += f'{str(num + 1)}) ' + subject[0].capitalize() + ': ' + subject[1] + '\n'
 			await query.message.answer(
-				text=f'`Дисциплины с заполненным домашним заданием:`*\n{__text}*',
+				text=f'`{date_to_db}\nДисциплины с заполненным домашним заданием:`*\n{__text}*',
 				parse_mode='markdown'
 			)
-			await bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
+			try:
+				await bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
+			except aiogram.utils.exceptions.MessageToDeleteNotFound:
+				print('Какое-то сообщение не удаляется(')
 		else:
 			await query.message.answer(
 				text='*Никто не заполнил домашние задания на этот день* 😭', parse_mode='markdown'
 			)
 
 	except KeyError:
+		print(True)
 		await process_start_command(query.message)
 
 
 @dp.message_handler(lambda message: message.text == 'Получить задание!',  state="*")
 async def process_date(message: types.Message, state: FSMContext):
-	print(message.from_user.username)
+	print(message.from_user.username, 'получает задание')
 	await state.finish()
 	async with state.proxy() as data:
 		data['date_count'] = 0

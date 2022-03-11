@@ -48,12 +48,25 @@ class Database(object):
         return 'Домашнее задание добавлено'
 
     @Connections.safe
-    def is_available_homework(self, connection: tuple, date: str, data=False):
+    def is_available_homework_by_date(self, connection: tuple, date: str, data=False):
         connection, cursor = connection
         cursor = cursor.execute('''SELECT subject_id, text FROM Homework WHERE date = ?''', (date,)).fetchall()
+        connection.commit()
         if data:
             return cursor
 
+        if cursor:
+            return True
+        return False
+
+    @Connections.safe
+    def is_exists(self, connection: tuple, subject_name: str, date: str):
+        connection, cursor = connection
+        subject_name = subject_name.lower()
+        cursor = cursor.execute(
+            '''SELECT subject_id and date FROM Homework WHERE subject_id = ? and date = ?''',
+            (subject_name, date)).fetchall()
+        connection.commit()
         if cursor:
             return True
         return False
@@ -71,7 +84,18 @@ class Database(object):
         return answer[0][0]
 
     @Connections.safe
-    def delete_homework(self, connection: tuple, subject_name, date) -> None:
+    def edit_homework(self, connection: tuple, subject_name: str, date: str, text: str):
         connection, cursor = connection
+        subject_name = subject_name.lower()
+        cursor.execute(
+            '''UPDATE Homework SET text = ? WHERE subject_id = ? and date = ?;''', (text, subject_name, date)
+        )
+        connection.commit()
+
+    @Connections.safe
+    def delete_homework(self, connection: tuple, subject_name: str, date: str) -> None:
+        connection, cursor = connection
+        subject_name = subject_name.lower()
         cursor.execute('''
         DELETE FROM Homework WHERE subject_id = ? and date = ?;''', (subject_name, date))
+        connection.commit()
