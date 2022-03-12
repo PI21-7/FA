@@ -11,19 +11,40 @@ class Connections(object):
         def inside(*args, **kwargs):
             with sqlite3.connect(Connections.database) as connection:
                 result = func(*args, connection=(connection, connection.cursor()), **kwargs)
-                return result
-
+            return result
         return inside
 
 
 class Database(object):
+
+    class UsersDB(object):
+        @Connections.safe
+        def init(self, connection: tuple):
+            connection, cursor = connection
+            cursor.execute('''create table if not exists Users (
+            id          INTEGER primary key,
+            chat_id     TEXT not null,
+            user_group  TEXT not null 
+            )''')
+            connection.commit()
+
+        @Connections.safe
+        def add_user(self, connection: tuple, chat_id: str, user_group: str):
+            connection, cursor = connection
+            cursor.execute('''INSERT INTO Users (chat_id, user_group) VALUES (?, ?)''', (chat_id, user_group.upper()))
+
+        @Connections.safe
+        def get_user_group(self, connection: tuple, chat_id: str) -> str:
+            connection, cursor = connection
+            cursor = cursor.execute('''SELECT user_group FROM Users WHERE chat_id = ?''', (chat_id,)).fetchall()
+            return cursor
 
     @Connections.safe
     def init(self, connection: tuple, name: str = 'Homework') -> None:
         connection, cursor = connection
         cursor.execute(
             f'create table if not exists {name}('
-            f'id     INTEGER primary key,'
+            f'id         INTEGER primary key,'
             f'subject_id int  not null,'
             f'date       text not null,'
             f'text       TEXT not null)')

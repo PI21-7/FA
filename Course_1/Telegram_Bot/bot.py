@@ -17,6 +17,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 
 class SelfState(StatesGroup):
+	Group_state = State()
 	Add_state = State()
 	Edit_state = State()
 
@@ -24,7 +25,8 @@ class SelfState(StatesGroup):
 storage = MemoryStorage()
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=storage)
-db = Database()
+HDB = Database()
+UDB = Database.UsersDB()
 
 days_of_week = {
 	1: 'Понедельник',
@@ -38,7 +40,17 @@ days_of_week = {
 
 @dp.message_handler(commands=['start'], state="*")
 async def process_start_command(message: types.Message):
-	await message.answer("Привет! Нажми на кнопку, чтобы получить домашнее задание.", reply_markup=Buttons.answer_start)
+	await message.answer("Привет! Для получения задания - введи номер своей группы.\n\n Например: ПИ21-7")
+	await SelfState.Group_state.set()
+
+
+@dp.message_handler(state=SelfState.Group_state)
+async def group_state_command(message: types.Message, state: FSMContext):
+	await state.finish()
+	await message.answer("Нажми на кнопку, чтобы получить домашнее задание.", reply_markup=Buttons.answer_start)
+	chat_id = message.chat.id
+	user_group = message.text
+	UDB.add_user(chat_id=chat_id, user_group=user_group)
 
 
 @dp.message_handler(lambda message: message.text == 'Управление заданиями', state="*")
@@ -81,7 +93,7 @@ async def add_homework(message: types.Message, state: FSMContext):
 	Subject, Date, Exercise = text[0], text[1], ' '.join(text[2:])
 	await message.answer(
 		text='*{}*'.format(
-			db.add_homework(
+			HDB.add_homework(
 				subject_name=Subject,
 				date=Date, text=Exercise,
 				username=message.from_user.username)),
@@ -111,7 +123,7 @@ async def edit_homework(message: types.Message, state: FSMContext):
 		await state.finish()
 		return 0
 	Subject, Date = text[0], text[1]
-	if db.is_exists(date=Date, subject_name=Subject):
+	if HDB.is_exists(date=Date, subject_name=Subject):
 		print(message.from_user.username, 'отредактировал:\n', text)
 		await bot.edit_message_text(
 			chat_id=message.chat.id,
@@ -123,7 +135,7 @@ async def edit_homework(message: types.Message, state: FSMContext):
 			chat_id=message.chat.id,
 			message_id=message.message_id
 		)
-		db.delete_homework(subject_name=Subject, date=Date)
+		HDB.delete_homework(subject_name=Subject, date=Date)
 		await state.finish()
 		await SelfState.Add_state.set()
 	else:
@@ -149,9 +161,9 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 		date_to_db = [
 			(start_date + timedelta(days=days[day])).strftime('%d.%m.%y'),
 			(start_date + timedelta(days=days[day])).strftime('%d.%m.%Y')]
-		if db.is_available_homework_by_date(date=date_to_db[0]) or db.is_available_homework_by_date(date=date_to_db[1]):
-			date_to_db = date_to_db[0] if db.is_available_homework_by_date(date=date_to_db[0]) else date_to_db[1]
-			available_homework = db.is_available_homework_by_date(date=date_to_db, data=True)
+		if HDB.is_available_homework_by_date(date=date_to_db[0]) or HDB.is_available_homework_by_date(date=date_to_db[1]):
+			date_to_db = date_to_db[0] if HDB.is_available_homework_by_date(date=date_to_db[0]) else date_to_db[1]
+			available_homework = HDB.is_available_homework_by_date(date=date_to_db, data=True)
 			__text = str()
 			for num, subject in enumerate(available_homework):
 				__text += f'{str(num + 1)}) ' + subject[0].capitalize() + ': ' + subject[1] + '\n'
@@ -191,7 +203,7 @@ async def all_week_homework(call: types.CallbackQuery, state: FSMContext):
 		start_date = week_definition(date_count, debug=True)
 		for day in range(6):
 			current_day = (start_date + timedelta(days=day)).strftime('%d.%m.%Y')
-			available_homework = db.is_available_homework_by_date(date=current_day, data=True)
+			available_homework = HDB.is_available_homework_by_date(date=current_day, data=True)
 			__text = ''
 
 			try:
