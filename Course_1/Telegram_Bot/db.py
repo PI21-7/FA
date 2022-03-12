@@ -78,7 +78,6 @@ class Database(object):
     @Connections.safe
     def is_available_homework_by_date(self, connection: tuple, date: str, group: str, data=False):
         connection, cursor = connection
-        print(group)
         cursor = cursor.execute('''SELECT subject_id, text FROM Homework WHERE date = ? and "Group" = ?''',
                                 (date, group)).fetchall()
         connection.commit()

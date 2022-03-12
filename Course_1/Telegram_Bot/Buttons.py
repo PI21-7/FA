@@ -1,4 +1,13 @@
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
+import transliterate as tr
+
+
+def create_subjects_keyboard(schedule: list or set):
+    buttons_list = []
+    for item in schedule:
+        buttons_list.append([InlineKeyboardButton(text=item, callback_data=tr.translit(item, 'ru', reversed=True))])
+    keyboard_inline_buttons = InlineKeyboardMarkup(inline_keyboard=buttons_list)
+    return keyboard_inline_buttons
 
 
 answer_start = ReplyKeyboardMarkup(resize_keyboard=True).add("Получить задание!").add('Управление заданиями')
@@ -17,7 +26,10 @@ Inline_Edit = InlineKeyboardButton(text='Редактировать ДЗ', callb
 Inline_Add = InlineKeyboardButton(text='Добавить ДЗ', callback_data='Inline_Add')
 Inline_Manage.add(Inline_Add).add(Inline_Edit)
 
-
+Inline_Date_ADD = InlineKeyboardMarkup()
+Inline_Date_ADD.add(Inline_Date_Up).add(Inline_Date_Bm).add(Inline_Date_Bt).add(Inline_Date_Bwd)\
+    .add(Inline_Date_Bth).add(Inline_Date_Bf)\
+    .add(Inline_Date_Sn).add(Inline_Date_Down)
 Inline_Date.add(Inline_Date_Up).add(Inline_Date_Week).add(Inline_Date_Bm).add(Inline_Date_Bt).add(Inline_Date_Bwd)\
     .add(Inline_Date_Bth).add(Inline_Date_Bf)\
     .add(Inline_Date_Sn).add(Inline_Date_Down)
