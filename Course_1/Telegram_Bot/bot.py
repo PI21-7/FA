@@ -1,5 +1,6 @@
 import datetime
 from datetime import timedelta
+
 from Schedule import Schedule
 import transliterate as tr
 import aiogram.utils.exceptions
@@ -36,42 +37,55 @@ days_of_week = {
 	6: 'Суббота'
 }
 
-HDB.init()
-UDB.init()
-HDB.add_homework(subject_name = "алгебра", text = "кр", date = "12.03.2022", username="monotank", group = "ПИ21-7")
 
 def get_user_group(message: types.Message):
 	return UDB.get_user_group(chat_id=message.chat.id)[0][0]
 
 
-def get_group_schedule(group: str, start: datetime.date) -> set:
+def get_group_schedule(group: str, start: datetime.date) -> list:
 	end = (start + timedelta(weeks=2)).strftime("%Y.%m.%d")
 	start = start.strftime("%Y.%m.%d")
 	SCHEDULE = Schedule.get_group_schedule(group=group, start=start, end=end)
 	lessons = set()
 	for i in SCHEDULE:
+		if i['discipline'] == 'Элективные дисциплины по физической культуре и спорту':
+			continue
 		lessons.add(
 			i['discipline'] + ' ' + i['lecturer_title'].split()[0]
 			if i['discipline'] == 'Иностранный язык'
 			else i['discipline'])
-	return lessons
+
+	return list(lessons)
 
 
 @dp.callback_query_handler(lambda query: 'Inline' not in query.data, state=SelfState.Add_state)
 async def add_homework_subject(query: types.CallbackQuery, state: FSMContext):
 	try:
 		async with state.proxy() as data:
-			data['subject'] = tr.translit(query.data, language_code='ru')
+			data['subject'] = query.conf
 			date_count = data['date_count']
 			data["state"] = True
+
+		schedule = get_group_schedule(group=get_user_group(query.message), start=week_definition(date_count, debug=True))
+		transliterated_schedule = list(map(
+			lambda x: tr.translit(x, language_code='ru', reversed=True), schedule))
+		subject = None
+		for pos, let in enumerate(transliterated_schedule):
+			if query.data == let:
+				subject = schedule[pos]
+		if subject is None:
+			async with state.proxy() as data:
+				subject = data['subject']
+
+		async with state.proxy() as data:
+			data['subject'] = subject
 		start_date, end_date = week_definition(date_count)
 		await bot.edit_message_text(
 			chat_id=query.message.chat.id,
 			message_id=query.message.message_id,
-			text=f'*На какой день задание?*\n{start_date} - {end_date}',
+			text=f'*На какой день задание?\n📅 {start_date} - {end_date} 📅*',
 			reply_markup=Buttons.Inline_Date_ADD,
 			parse_mode='markdown')
-		await SelfState.Add_state.set()
 	except KeyError as e:
 		print(e)
 
@@ -111,10 +125,9 @@ async def process_add_command(message: types.Message, state: FSMContext):
 
 
 @dp.callback_query_handler(text='Inline_Add')
-async def add_homework_state(call: types.CallbackQuery, state: FSMContext):
+async def add_homework_state(call: types.CallbackQuery):
 	start_date = datetime.datetime.now()
 	await SelfState.Add_state.set()
-	print(Buttons.create_subjects_keyboard(get_group_schedule(get_user_group(call.message), start=start_date)))
 	await bot.edit_message_text(
 		chat_id=call.message.chat.id,
 		message_id=call.message.message_id,
@@ -126,14 +139,19 @@ async def add_homework_state(call: types.CallbackQuery, state: FSMContext):
 
 @dp.message_handler(state=SelfState.Add_state)
 async def add_homework(message: types.Message, state: FSMContext):
-	await state.finish()
-	text = message.text.split()
+	text = message.text
 	print(message.from_user.username, 'добавил:\n', text)
-	if len(text) < 3:
-		await message.answer(text='*Что?*🤨', parse_mode='markdown')
+	try:
+		async with state.proxy() as data:
+			Date = data['date']
+			Subject = data['subject']
+			data['state'] = False
+	except KeyError:
+		await message.answer(text='Ну ладно 🥺', parse_mode='markdown')
 		await state.finish()
 		return
-	Subject, Date, Exercise = text[0], text[1], ' '.join(text[2:])
+	await state.finish()
+	Exercise = text
 	await message.answer(
 		text='*{}*'.format(
 			HDB.add_homework(
@@ -188,7 +206,34 @@ async def edit_homework(message: types.Message, state: FSMContext):
 		await state.finish()
 
 
-@dp.callback_query_handler(lambda query: query.data.split('_')[1][0] == 'B')
+@dp.callback_query_handler(lambda query: query.data.split('_')[2][0] == 'B', state=SelfState.Add_state)
+async def add_homework_date(query: types.CallbackQuery, state: FSMContext):
+	async with state.proxy() as data:
+		current_state = data['state']
+		date_count = data['date_count']
+	if current_state:
+		day = query.data.split("_")[2]
+		days = {
+			'Bm': 0,
+			'Bt': 1,
+			'Bwd': 2,
+			'Bth': 3,
+			'Bf': 4,
+			'BSn': 5
+		}
+		start_date = week_definition(date_count, debug=True)
+		await bot.edit_message_text(
+			text='*Введите домашнее задание*',
+			chat_id=query.message.chat.id,
+			message_id=query.message.message_id,
+			parse_mode='markdown'
+		)
+		async with state.proxy() as data:
+			data['date'] = (start_date + timedelta(days=days[day])).strftime('%d.%m.%Y')
+		await SelfState.Add_state.set()
+
+
+@dp.callback_query_handler(lambda query: query.data.split('_')[2][0] == 'B')
 async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 	day = query.data.split("_")[2]
 	try:
@@ -250,7 +295,7 @@ async def process_date(message: types.Message, state: FSMContext):
 		data['date_count'] = 0
 		data["state"] = False
 	await message.answer(
-		f"*Выбираем день недели\n{week_definition(0)[0]} - {week_definition(0)[1]}*",
+		f"*Выбираем день недели\n📅 {week_definition(0)[0]} - {week_definition(0)[1]} 📅*",
 		parse_mode="markdown", reply_markup=Buttons.Inline_Date)
 
 
@@ -297,7 +342,7 @@ async def callback_down(call: types.CallbackQuery, state: FSMContext):
 			await bot.edit_message_text(
 				chat_id=call.message.chat.id,
 				message_id=call.message.message_id,
-				text=f"*Выбираем день недели\n{week_definition(date_count)[0]} - {week_definition(date_count)[1]}*",
+				text=f"*{'Выбираем день недели' if not button_state else 'На какой день задание?'}\n📅 {week_definition(date_count)[0]} - {week_definition(date_count)[1]} 📅*",
 				parse_mode="markdown",
 				reply_markup=Buttons.Inline_Date_ADD if button_state else Buttons.Inline_Date)
 
@@ -315,7 +360,7 @@ async def callback_up(call: types.CallbackQuery, state: FSMContext):
 		await bot.edit_message_text(
 			chat_id=call.message.chat.id,
 			message_id=call.message.message_id,
-			text=f"*Выбираем день недели\n{week_definition(date_count)[0]} - {week_definition(date_count)[1]}*",
+			text=f"*{'Выбираем день недели' if not button_state else 'На какой день задание?'}\n📅 {week_definition(date_count)[0]} - {week_definition(date_count)[1]} 📅*",
 			parse_mode="markdown",
 			reply_markup=Buttons.Inline_Date_ADD if button_state else Buttons.Inline_Date)
 	except KeyError:
