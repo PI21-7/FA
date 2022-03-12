@@ -54,8 +54,8 @@ class Database(object):
             f'id         INTEGER primary key,'
             f'subject_id int  not null,'
             f'date       text not null,'
-            f'text       text not null'
-            f'"Group"    text not null,'
+            f'text       text not null,'
+            f'"Group"      text not null,'
             f'Author     text not null)'
         )
 
