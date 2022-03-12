@@ -15,7 +15,7 @@ Inline_Date_Up = InlineKeyboardButton(text='⏫', callback_data='Inline_Date_Up'
 Inline_Manage = InlineKeyboardMarkup(inline_keyboard=True)
 Inline_Edit = InlineKeyboardButton(text='Редактировать ДЗ', callback_data='Inline_Edit')
 Inline_Add = InlineKeyboardButton(text='Добавить ДЗ', callback_data='Inline_Add')
-Inline_Manage.add(Inline_Edit).add(Inline_Add)
+Inline_Manage.add(Inline_Add).add(Inline_Edit)
 
 
 Inline_Date.add(Inline_Date_Up).add(Inline_Date_Week).add(Inline_Date_Bm).add(Inline_Date_Bt).add(Inline_Date_Bwd)\

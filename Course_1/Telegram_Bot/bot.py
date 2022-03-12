@@ -38,9 +38,13 @@ days_of_week = {
 }
 
 
+def get_user_group(message: types.Message):
+	return UDB.get_user_group(chat_id=message.chat.id)[0][0]
+
+
 @dp.message_handler(commands=['start'], state="*")
 async def process_start_command(message: types.Message):
-	await message.answer("Привет! Для получения задания - введи номер своей группы.\n\n Например: ПИ21-7")
+	await message.answer("Привет! Для получения задания, скажи из какой ты группы!\n\nНапример: ПИ21-7")
 	await SelfState.Group_state.set()
 
 
@@ -76,7 +80,7 @@ async def add_homework_state(call: types.CallbackQuery):
 	await bot.edit_message_text(
 		chat_id=call.message.chat.id,
 		message_id=call.message.message_id,
-		text=f"Вводите домашнее задание в формате:\n*Название предмета  Дата  Задание*",
+		text=f"*Введите домашнее задание:\n\nПример:* `Алгебра 15.03.2022 Подготовиться к кр`",
 		parse_mode="markdown",
 	)
 
@@ -95,8 +99,10 @@ async def add_homework(message: types.Message, state: FSMContext):
 		text='*{}*'.format(
 			HDB.add_homework(
 				subject_name=Subject,
-				date=Date, text=Exercise,
-				username=message.from_user.username)),
+				date=Date,
+				text=Exercise,
+				username=message.from_user.username,
+				group=get_user_group(message))),
 		parse_mode='markdown')
 	try:
 		await bot.delete_message(message.chat.id, message_id=message.message_id - 1)
@@ -110,7 +116,7 @@ async def edit_init(call: types.CallbackQuery):
 	await bot.edit_message_text(
 		chat_id=call.message.chat.id,
 		message_id=call.message.message_id,
-		text=f"*Введите предмет и дату для редактирования в формате:\nНазвание предмета  Дата(Д.М.Г)*",
+		text=f"*Введите предмет и дату для редактирования:\n\nПример:* `Алгебра 15.03.2022`",
 		parse_mode="markdown",
 	)
 
@@ -123,19 +129,19 @@ async def edit_homework(message: types.Message, state: FSMContext):
 		await state.finish()
 		return 0
 	Subject, Date = text[0], text[1]
-	if HDB.is_exists(date=Date, subject_name=Subject):
+	if HDB.is_exists(date=Date, subject_name=Subject, group=get_user_group(message)):
 		print(message.from_user.username, 'отредактировал:\n', text)
 		await bot.edit_message_text(
 			chat_id=message.chat.id,
 			message_id=message.message_id - 1,
-			text=f"Введите данные для изменения в формате:\n*Название Предмета  Дата  Задание*",
+			text=f"*Введите данные для изменения:\n\nПример:* `Алгебра 15.03.2022 Подготовиться к кр`",
 			parse_mode="markdown",
 		)
 		await bot.delete_message(
 			chat_id=message.chat.id,
 			message_id=message.message_id
 		)
-		HDB.delete_homework(subject_name=Subject, date=Date)
+		HDB.delete_homework(subject_name=Subject, date=Date, group=get_user_group(message))
 		await state.finish()
 		await SelfState.Add_state.set()
 	else:
@@ -161,9 +167,22 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 		date_to_db = [
 			(start_date + timedelta(days=days[day])).strftime('%d.%m.%y'),
 			(start_date + timedelta(days=days[day])).strftime('%d.%m.%Y')]
-		if HDB.is_available_homework_by_date(date=date_to_db[0]) or HDB.is_available_homework_by_date(date=date_to_db[1]):
-			date_to_db = date_to_db[0] if HDB.is_available_homework_by_date(date=date_to_db[0]) else date_to_db[1]
-			available_homework = HDB.is_available_homework_by_date(date=date_to_db, data=True)
+
+		if HDB.is_available_homework_by_date(
+				date=date_to_db[0],
+				group=get_user_group(query.message)) or HDB.is_available_homework_by_date(
+			date=date_to_db[1],
+			group=get_user_group(query.message)):
+
+			date_to_db = date_to_db[0] if HDB.is_available_homework_by_date(
+				date=date_to_db[0],
+				group=get_user_group(query.message)) else date_to_db[1]
+
+			available_homework = HDB.is_available_homework_by_date(
+				date=date_to_db,
+				data=True,
+				group=get_user_group(query.message))
+
 			__text = str()
 			for num, subject in enumerate(available_homework):
 				__text += f'{str(num + 1)}) ' + subject[0].capitalize() + ': ' + subject[1] + '\n'
@@ -203,7 +222,10 @@ async def all_week_homework(call: types.CallbackQuery, state: FSMContext):
 		start_date = week_definition(date_count, debug=True)
 		for day in range(6):
 			current_day = (start_date + timedelta(days=day)).strftime('%d.%m.%Y')
-			available_homework = HDB.is_available_homework_by_date(date=current_day, data=True)
+			available_homework = HDB.is_available_homework_by_date(
+				date=current_day,
+				group=get_user_group(call.message),
+				data=True)
 			__text = ''
 
 			try:
