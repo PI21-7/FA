@@ -27,7 +27,6 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=storage)
 HDB = Database()
 UDB = Database.UsersDB()
-
 days_of_week = {
 	1: 'Понедельник',
 	2: 'Вторник',
