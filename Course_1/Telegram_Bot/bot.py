@@ -26,6 +26,15 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=storage)
 db = Database()
 
+days_of_week = {
+	1: 'Понедельник',
+	2: 'Вторник',
+	3: 'Среда',
+	4: 'Четверг',
+	5: 'Пятница',
+	6: 'Суббота'
+}
+
 
 @dp.message_handler(commands=['start'], state="*")
 async def process_start_command(message: types.Message):
@@ -99,6 +108,7 @@ async def edit_homework(message: types.Message, state: FSMContext):
 	text = message.text.split()
 	if len(text) < 2 or all(map(lambda x: len(x) > 3, text)):
 		await message.answer_sticker(sticker='CAACAgIAAxkBAAEEG9BiKojK_SZBFl_KqTqswln3CM1ptQAC7xMAApJeSUuQKkME9nIP_SME')
+		await state.finish()
 		return 0
 	Subject, Date = text[0], text[1]
 	if db.is_exists(date=Date, subject_name=Subject):
@@ -123,6 +133,7 @@ async def edit_homework(message: types.Message, state: FSMContext):
 
 @dp.callback_query_handler(lambda query: query.data.split('_')[2][0] == 'B')
 async def homework_reply(query: types.CallbackQuery, state: FSMContext):
+	day = query.data.split("_")[2]
 	try:
 		async with state.proxy() as data:
 			date_count = data['date_count']
@@ -136,8 +147,8 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 			'BSn': 5
 		}
 		date_to_db = [
-			(start_date + timedelta(days=days[query.data.split('_')[2]])).strftime('%d.%m.%y'),
-			(start_date + timedelta(days=days[query.data.split('_')[2]])).strftime('%d.%m.%Y')]
+			(start_date + timedelta(days=days[day])).strftime('%d.%m.%y'),
+			(start_date + timedelta(days=days[day])).strftime('%d.%m.%Y')]
 		if db.is_available_homework_by_date(date=date_to_db[0]) or db.is_available_homework_by_date(date=date_to_db[1]):
 			date_to_db = date_to_db[0] if db.is_available_homework_by_date(date=date_to_db[0]) else date_to_db[1]
 			available_homework = db.is_available_homework_by_date(date=date_to_db, data=True)
@@ -145,7 +156,7 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 			for num, subject in enumerate(available_homework):
 				__text += f'{str(num + 1)}) ' + subject[0].capitalize() + ': ' + subject[1] + '\n'
 			await query.message.answer(
-				text=f'`{date_to_db}\nДисциплины с заполненным домашним заданием:`*\n{__text}*',
+				text=f'*📅 {days_of_week[days[day] + 1]} {date_to_db}*\n`{__text}`',
 				parse_mode='markdown'
 			)
 			try:
@@ -154,7 +165,7 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 				print('Какое-то сообщение не удаляется(')
 		else:
 			await query.message.answer(
-				text='*Никто не заполнил домашние задания на этот день* 😭', parse_mode='markdown'
+				text='*Никто не заполнил домашнее задания на этот день* 😭', parse_mode='markdown'
 			)
 
 	except KeyError:
@@ -178,14 +189,6 @@ async def all_week_homework(call: types.CallbackQuery, state: FSMContext):
 		async with state.proxy() as data:
 			date_count = data['date_count']
 		start_date = week_definition(date_count, debug=True)
-		days_of_week = {
-			1: 'Понедельник',
-			2: 'Вторник',
-			3: 'Среда',
-			4: 'Четверг',
-			5: 'Пятница',
-			6: 'Суббота'
-		}
 		for day in range(6):
 			current_day = (start_date + timedelta(days=day)).strftime('%d.%m.%Y')
 			available_homework = db.is_available_homework_by_date(date=current_day, data=True)
@@ -200,11 +203,11 @@ async def all_week_homework(call: types.CallbackQuery, state: FSMContext):
 				__text += \
 					f'{str(num + 1)}) ' + subject[0].capitalize() + ': ' + subject[1] + '\n'
 			if not __text:
-				__text = '*Никто не заполнил домашние задания на этот день* 😭'
+				__text = '*Никто не заполнил домашнее задания на этот день* 😭'
 			else:
 				__text = '`' + __text + '`'
 			await call.message.answer(
-				text=f'*📅 {days_of_week[day + 1]} {current_day} 📅*\n{__text}',
+				text=f'*📅 {days_of_week[day + 1]} {current_day}*\n{__text}',
 				parse_mode='markdown')
 	except KeyError:
 		await process_start_command(call.message)
@@ -219,7 +222,7 @@ async def callback_down(call: types.CallbackQuery, state: FSMContext):
 		await bot.edit_message_text(
 			chat_id=call.message.chat.id,
 			message_id=call.message.message_id,
-			text=f"*Выбираем дату \n{week_definition(date_count)[0]} - {week_definition(date_count)[1]}*",
+			text=f"*Выбираем день недели \n{week_definition(date_count)[0]} - {week_definition(date_count)[1]}*",
 			parse_mode="markdown",
 			reply_markup=Buttons.Inline_Date)
 	except KeyError:
