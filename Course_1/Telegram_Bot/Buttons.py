@@ -1,11 +1,13 @@
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
-import transliterate as tr
+from transliterate import translit
 
 
 def create_subjects_keyboard(schedule: list or set):
     buttons_list = []
     for item in schedule:
-        buttons_list.append([InlineKeyboardButton(text=item, callback_data=tr.translit(item, 'ru', reversed=True))])
+        item: str
+        buttons_list.append([InlineKeyboardButton(text=item, callback_data=translit(
+            item, language_code='ru', reversed=True))])
     keyboard_inline_buttons = InlineKeyboardMarkup(inline_keyboard=buttons_list)
     return keyboard_inline_buttons
 
@@ -13,7 +15,7 @@ def create_subjects_keyboard(schedule: list or set):
 answer_start = ReplyKeyboardMarkup(resize_keyboard=True).add("Получить задание!").add('Управление заданиями')
 Inline_Date = InlineKeyboardMarkup(inline_keyboard=True, row_width=3)
 Inline_Date_Week = InlineKeyboardButton(text='Вся неделя 🥶', callback_data='Inline_Date_Week')
-Inline_Date_Bm = InlineKeyboardButton(text='понедельник 💀', callback_data='Inline_Date_Bm')
+Inline_Date_Bm = InlineKeyboardButton(text='Понедельник 💀', callback_data='Inline_Date_Bm')
 Inline_Date_Bt = InlineKeyboardButton(text='Вторник 🤯', callback_data='Inline_Date_Bt')
 Inline_Date_Bwd = InlineKeyboardButton(text='Среда 😒', callback_data='Inline_Date_Bwd')
 Inline_Date_Bth = InlineKeyboardButton(text='Четверг 🤨', callback_data='Inline_Date_Bth')
