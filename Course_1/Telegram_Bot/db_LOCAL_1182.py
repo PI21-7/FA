@@ -65,6 +65,7 @@ class Database(object):
     def add_homework(self, connection: tuple, subject_name: str,
                      text: str, date: str, username: str, group: str) -> str:
         is_added = self.receive_homework(subject_name=subject_name, date=date, group=group)
+        subject_name = subject_name.lower()
         if is_added:
             return 'Запись уже присутствует'
         connection, cursor = connection
@@ -90,6 +91,7 @@ class Database(object):
     @Connections.safe
     def is_exists(self, connection: tuple, subject_name: str, date: str, group: str):
         connection, cursor = connection
+        subject_name = subject_name.lower()
         cursor = cursor.execute(
             '''SELECT subject_id and date FROM Homework WHERE subject_id = ? and date = ? and "Group" = ?''',
             (subject_name, date, group)).fetchall()
@@ -100,6 +102,7 @@ class Database(object):
 
     @Connections.safe
     def receive_homework(self, connection: tuple, subject_name: str, date: str, group: str) -> str or List[Tuple[str]]:
+        subject_name = subject_name.lower()
         connection, cursor = connection
         answer = cursor.execute(
             '''SELECT text FROM Homework WHERE subject_id = ? and date = ? and "Group" = ?''',
@@ -112,6 +115,7 @@ class Database(object):
     @Connections.safe
     def edit_homework(self, connection: tuple, subject_name: str, date: str, text: str, group: str):
         connection, cursor = connection
+        subject_name = subject_name.lower()
         cursor.execute(
             '''UPDATE Homework SET text = ? WHERE subject_id = ? and date = ? and "Group" = ?;''',
             (text, subject_name, date, group)
@@ -121,6 +125,7 @@ class Database(object):
     @Connections.safe
     def delete_homework(self, connection: tuple, subject_name: str, date: str, group: str) -> None:
         connection, cursor = connection
+        subject_name = subject_name.lower()
         cursor.execute('''
         DELETE FROM Homework WHERE subject_id = ? and date = ? and "Group" = ?;''', (subject_name, date, group))
         connection.commit()
