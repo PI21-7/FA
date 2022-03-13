@@ -104,7 +104,7 @@ async def group_state_command(message: types.Message, state: FSMContext):
 	await state.finish()
 	await message.answer("Нажми на кнопку, чтобы получить домашнее задание.", reply_markup=Buttons.answer_start)
 	chat_id = message.chat.id
-	user_group = message.text
+	user_group = message.text.upper()
 	UDB.add_user(chat_id=chat_id, user_group=user_group)
 
 
