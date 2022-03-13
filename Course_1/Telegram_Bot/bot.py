@@ -117,14 +117,13 @@ async def add_homework_subject(query: types.CallbackQuery, state: FSMContext):
 
 		async with state.proxy() as data:
 			data['subject'] = subject
-		start_date, end_date = week_definition(date_count)
 		await bot.edit_message_text(
 			chat_id=query.message.chat.id,
 			message_id=query.message.message_id,
 			text=f'*Введите новое задание*',
 			parse_mode='markdown')
 	except KeyError as e:
-		print(e)		
+		print(e)
 
 
 @dp.message_handler(commands=['start'], state="*")
@@ -214,8 +213,8 @@ async def edit_init(call: types.CallbackQuery, state: FSMContext):
 		chat_id=call.message.chat.id,
 		message_id=call.message.message_id,
 		text=f"*На какой день задание?\n📅 {start_date} - {end_date} 📅*",
-		reply_markup = Buttons.Inline_Date_ADD,
-		parse_mode = "markdown"
+		reply_markup=Buttons.Inline_Date_ADD,
+		parse_mode="markdown"
 	)
 	await SelfState.Edit_state.set()
 
@@ -230,7 +229,8 @@ async def edit_homework(message: types.Message, state: FSMContext):
 	if HDB.is_exists(date=Date, subject_name=Subject, group=get_user_group(message)):
 		print(message.from_user.username, 'отредактировал:\n', text)
 		HDB.delete_homework(subject_name=Subject, date=Date, group=get_user_group(message))
-		await message.answer(text=f'*{HDB.add_homework(subject_name=Subject,username=message.from_user.username,text=text, date=Date, group=get_user_group(message), edit = True)}*', parse_mode='markdown')
+		await message.answer(
+			text=f'*{HDB.add_homework(subject_name=Subject,username=message.from_user.username,text=text, date=Date, group=get_user_group(message), edit = True)}*', parse_mode='markdown')
 		await state.finish()
 	else:
 		await message.answer(text='*Такой записи не существует!*', parse_mode='markdown')
@@ -291,7 +291,7 @@ async def add_homework_date(query: types.CallbackQuery, state: FSMContext):
 			chat_id=query.message.chat.id,
 			message_id=query.message.message_id,
 			parse_mode='markdown',
-			reply_markup=Buttons.create_subjects_keyboard(homework) 
+			reply_markup=Buttons.create_subjects_keyboard(homework)
 		)
 		await SelfState.Edit_state.set()
 
