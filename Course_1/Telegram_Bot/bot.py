@@ -96,6 +96,37 @@ async def add_homework_subject(query: types.CallbackQuery, state: FSMContext):
 		print(e)
 
 
+@dp.callback_query_handler(lambda query: 'Inline' not in query.data, state=SelfState.Edit_state)
+async def add_homework_subject(query: types.CallbackQuery, state: FSMContext):
+	try:
+		async with state.proxy() as data:
+			data['subject'] = query.conf
+			date_count = data['date_count']
+			data["state"] = True
+
+		schedule = get_group_schedule(group=get_user_group(query.message), start=week_definition(date_count, debug=True))
+		transliterated_schedule = list(map(
+			lambda x: tr.translit(x, language_code='ru', reversed=True), schedule))
+		subject = None
+		for pos, let in enumerate(transliterated_schedule):
+			if query.data == let:
+				subject = schedule[pos]
+		if subject is None:
+			async with state.proxy() as data:
+				subject = data['subject']
+
+		async with state.proxy() as data:
+			data['subject'] = subject
+		start_date, end_date = week_definition(date_count)
+		await bot.edit_message_text(
+			chat_id=query.message.chat.id,
+			message_id=query.message.message_id,
+			text=f'*Введите новое задание*',
+			parse_mode='markdown')
+	except KeyError as e:
+		print(e)		
+
+
 @dp.message_handler(commands=['start'], state="*")
 async def process_start_command(message: types.Message):
 	await message.answer("Привет! Для получения задания, скажи из какой ты группы!\n\nНапример: ПИ21-7")
@@ -174,39 +205,33 @@ async def add_homework(message: types.Message, state: FSMContext):
 
 
 @dp.callback_query_handler(text='Inline_Edit')
-async def edit_init(call: types.CallbackQuery):
-	await SelfState.Edit_state.set()
+async def edit_init(call: types.CallbackQuery, state: FSMContext):
+	async with state.proxy() as data:
+		data['state'] = True
+		date_count = data['date_count']
+	start_date, end_date = week_definition(date_count)
 	await bot.edit_message_text(
 		chat_id=call.message.chat.id,
 		message_id=call.message.message_id,
-		text=f"*Введите предмет и дату для редактирования:\n\nПример:* `Алгебра 15.03.2022`",
-		parse_mode="markdown",
+		text=f"*На какой день задание?\n📅 {start_date} - {end_date} 📅*",
+		reply_markup = Buttons.Inline_Date_ADD,
+		parse_mode = "markdown"
 	)
+	await SelfState.Edit_state.set()
 
 
 @dp.message_handler(state=SelfState.Edit_state)
 async def edit_homework(message: types.Message, state: FSMContext):
-	text = message.text.split()
-	if len(text) < 2 or all(map(lambda x: len(x) > 3, text)):
-		await message.answer_sticker(sticker='CAACAgIAAxkBAAEEG9BiKojK_SZBFl_KqTqswln3CM1ptQAC7xMAApJeSUuQKkME9nIP_SME')
-		await state.finish()
-		return 0
-	Subject, Date = text[0], text[1]
+	text = message.text
+	async with state.proxy() as data:
+		Date = data['date']
+		Subject = data['subject']
+	print(Date, Subject, get_user_group(message))
 	if HDB.is_exists(date=Date, subject_name=Subject, group=get_user_group(message)):
 		print(message.from_user.username, 'отредактировал:\n', text)
-		await bot.edit_message_text(
-			chat_id=message.chat.id,
-			message_id=message.message_id - 1,
-			text=f"*Введите данные для изменения:\n\nПример:* `Алгебра 15.03.2022 Подготовиться к кр`",
-			parse_mode="markdown",
-		)
-		await bot.delete_message(
-			chat_id=message.chat.id,
-			message_id=message.message_id
-		)
 		HDB.delete_homework(subject_name=Subject, date=Date, group=get_user_group(message))
+		await message.answer(text=f'*{HDB.add_homework(subject_name=Subject,username=message.from_user.username,text=text, date=Date, group=get_user_group(message), edit = True)}*', parse_mode='markdown')
 		await state.finish()
-		await SelfState.Add_state.set()
 	else:
 		await message.answer(text='*Такой записи не существует!*', parse_mode='markdown')
 		await state.finish()
@@ -237,6 +262,38 @@ async def add_homework_date(query: types.CallbackQuery, state: FSMContext):
 		async with state.proxy() as data:
 			data['date'] = (start_date + timedelta(days=days[day])).strftime('%d.%m.%Y')
 		await SelfState.Add_state.set()
+
+
+@dp.callback_query_handler(lambda query: query.data.split('_')[2][0] == 'B', state=SelfState.Edit_state)
+async def add_homework_date(query: types.CallbackQuery, state: FSMContext):
+	async with state.proxy() as data:
+		current_state = data['state']
+		date_count = data['date_count']
+	if current_state:
+		day = query.data.split("_")[2]
+		days = {
+			'Bm': 0,
+			'Bt': 1,
+			'Bwd': 2,
+			'Bth': 3,
+			'Bf': 4,
+			'BSn': 5
+		}
+		start_date = week_definition(date_count, debug=True)
+		async with state.proxy() as data:
+			data['date'] = (start_date + timedelta(days=days[day])).strftime('%d.%m.%Y')
+			Date = data["date"]
+		homework = HDB.is_available_homework_by_date(date=Date, group=get_user_group(query.message), data=True)
+		homework = list(map(lambda x: x[0], homework))
+		print(homework)
+		await bot.edit_message_text(
+			text='*Выберите предмет*',
+			chat_id=query.message.chat.id,
+			message_id=query.message.message_id,
+			parse_mode='markdown',
+			reply_markup=Buttons.create_subjects_keyboard(homework) 
+		)
+		await SelfState.Edit_state.set()
 
 
 @dp.callback_query_handler(lambda query: query.data.split('_')[2][0] == 'B')

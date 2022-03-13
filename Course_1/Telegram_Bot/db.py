@@ -63,16 +63,13 @@ class Database(object):
 
     @Connections.safe
     def add_homework(self, connection: tuple, subject_name: str,
-                     text: str, date: str, username: str, group: str) -> str:
-        is_added = self.receive_homework(subject_name=subject_name, date=date, group=group)
-        if is_added:
-            return 'Запись уже присутствует'
+                     text: str, date: str, username: str, group: str, edit: bool=False) -> str:
         connection, cursor = connection
         # Записываем
         cursor.execute('''INSERT INTO Homework (subject_id, date, text, "Group", Author) VALUES (?, ?, ?, ?, ?)''',
                        (subject_name, date, text, group, username))
         connection.commit()
-        return 'Домашнее задание добавлено'
+        return 'Домашнее задание добавлено' if not edit else "Домашнее задание изменено"
 
     @Connections.safe
     def is_available_homework_by_date(self, connection: tuple, date: str, group: str, data=False):
