@@ -4,7 +4,7 @@ from Course_1.Telegram_Bot.db import *
 
 
 class DatabaseTests(unittest.TestCase):
-    Test_DB = Database()
+    Test_DB = Database.UsersDB()
 
     def test_init(self):
         """
@@ -12,7 +12,7 @@ class DatabaseTests(unittest.TestCase):
         """
         Database_NAME = 'TEST_DATABASE'
         Connections.database = f'{Database_NAME}.db'
-        self.Test_DB.init(name=Database_NAME)
+        self.Test_DB.init()
         self.assertTrue(os.path.exists(Connections.database), 'База данных не создалась или создалась некорректно')
 
 

@@ -52,11 +52,11 @@ class Database(object):
         cursor.execute(
             f'create table if not exists {name}('
             f'id         INTEGER primary key,'
-            f'subject_id int  not null,'
-            f'date       text not null,'
-            f'text       text not null,'
-            f'"Group"      text not null,'
-            f'Author     text not null)'
+            f'subject_id int,'
+            f'date       text,'
+            f'text       text,'
+            f'"Group"    text,'
+            f'Author     text)'
         )
 
         connection.commit()

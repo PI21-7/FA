@@ -23,8 +23,8 @@ class Database(object):
             connection, cursor = connection
             cursor.execute('''create table if not exists Users (
             id          INTEGER primary key,
-            chat_id     TEXT,
-            user_group  TEXT
+            chat_id     TEXT not null,
+            user_group  TEXT not null 
             )''')
             connection.commit()
 
@@ -54,8 +54,8 @@ class Database(object):
             f'id         INTEGER primary key,'
             f'subject_id int  not null,'
             f'date       text not null,'
-            f'text       text not null,'
-            f'"Group"      text not null,'
+            f'text       text not null'
+            f'"Group"    text not null,'
             f'Author     text not null)'
         )
 
