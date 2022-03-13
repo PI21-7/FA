@@ -1,54 +1,21 @@
-import datetime
-from datetime import timedelta
-
+from datetime import timedelta, datetime, date
 from Schedule import Schedule
 import transliterate as tr
 import aiogram.utils.exceptions
-from aiogram import Bot, types
-from aiogram.dispatcher import Dispatcher
+from aiogram import types
 from aiogram.utils import executor
-
+from utils import *
 from config import *
 import Buttons
-from db import Database
 from date import week_definition
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
-
-
-class SelfState(StatesGroup):
-	Group_state = State()
-	Add_state = State()
-	Edit_state = State()
-
-
-storage = MemoryStorage()
-bot = Bot(token=TOKEN)
-dp = Dispatcher(bot, storage=storage)
-HDB = Database()
-UDB = Database.UsersDB()
-
-days_of_week = {
-	1: 'Понедельник',
-	2: 'Вторник',
-	3: 'Среда',
-	4: 'Четверг',
-	5: 'Пятница',
-	6: 'Суббота'
-}
 
 
 def get_user_group(message: types.Message):
 	return UDB.get_user_group(chat_id=message.chat.id)[0][0]
 
 
-@dp.message_handler(lambda message: message.from_user.username == 'lexus_20013')
-async def ban_list(message: types.Message):
-	await bot.send_sticker(chat_id=message.chat.id, sticker='CAACAgIAAxkBAAEEIkRiLSC1ulNm9d8Y1IXYO7qlrPnmmQACLQADgzHTFIsV3PfSfsqdIwQ')
-
-
-def get_group_schedule(group: str, start: datetime.date) -> list:
+def get_group_schedule(group: str, start: date) -> list:
 	end = (start + timedelta(weeks=2)).strftime("%Y.%m.%d")
 	start = start.strftime("%Y.%m.%d")
 	SCHEDULE = Schedule.get_group_schedule(group=group, start=start, end=end)
@@ -162,7 +129,7 @@ async def process_add_command(message: types.Message, state: FSMContext):
 
 @dp.callback_query_handler(text='Inline_Add')
 async def add_homework_state(call: types.CallbackQuery):
-	start_date = datetime.datetime.now()
+	start_date = datetime.now()
 	await SelfState.Add_state.set()
 	await bot.edit_message_text(
 		chat_id=call.message.chat.id,
@@ -225,9 +192,7 @@ async def edit_homework(message: types.Message, state: FSMContext):
 	async with state.proxy() as data:
 		Date = data['date']
 		Subject = data['subject']
-	print(Date, Subject, get_user_group(message))
 	if HDB.is_exists(date=Date, subject_name=Subject, group=get_user_group(message)):
-		print(message.from_user.username, 'отредактировал:\n', text)
 		HDB.delete_homework(subject_name=Subject, date=Date, group=get_user_group(message))
 		await message.answer(
 			text=f'*{HDB.add_homework(subject_name=Subject,username=message.from_user.username,text=text, date=Date, group=get_user_group(message), edit = True)}*', parse_mode='markdown')
@@ -244,14 +209,6 @@ async def add_homework_date(query: types.CallbackQuery, state: FSMContext):
 		date_count = data['date_count']
 	if current_state:
 		day = query.data.split("_")[2]
-		days = {
-			'Bm': 0,
-			'Bt': 1,
-			'Bwd': 2,
-			'Bth': 3,
-			'Bf': 4,
-			'BSn': 5
-		}
 		start_date = week_definition(date_count, debug=True)
 		await bot.edit_message_text(
 			text='*Введите домашнее задание*',
@@ -271,14 +228,6 @@ async def add_homework_date(query: types.CallbackQuery, state: FSMContext):
 		date_count = data['date_count']
 	if current_state:
 		day = query.data.split("_")[2]
-		days = {
-			'Bm': 0,
-			'Bt': 1,
-			'Bwd': 2,
-			'Bth': 3,
-			'Bf': 4,
-			'BSn': 5
-		}
 		start_date = week_definition(date_count, debug=True)
 		async with state.proxy() as data:
 			data['date'] = (start_date + timedelta(days=days[day])).strftime('%d.%m.%Y')
@@ -303,14 +252,6 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 		async with state.proxy() as data:
 			date_count = data['date_count']
 		start_date = week_definition(date_count, debug=True)
-		days = {
-			'Bm': 0,
-			'Bt': 1,
-			'Bwd': 2,
-			'Bth': 3,
-			'Bf': 4,
-			'BSn': 5
-		}
 		date_to_db = [
 			(start_date + timedelta(days=days[day])).strftime('%d.%m.%y'),
 			(start_date + timedelta(days=days[day])).strftime('%d.%m.%Y')]
