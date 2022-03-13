@@ -42,6 +42,11 @@ def get_user_group(message: types.Message):
 	return UDB.get_user_group(chat_id=message.chat.id)[0][0]
 
 
+@dp.message_handler(lambda message: message.from_user.username == 'lexus_20013')
+async def ban_list(message: types.Message):
+	await bot.send_sticker(chat_id=message.chat.id, sticker='CAACAgIAAxkBAAEEIkRiLSC1ulNm9d8Y1IXYO7qlrPnmmQACLQADgzHTFIsV3PfSfsqdIwQ')
+
+
 def get_group_schedule(group: str, start: datetime.date) -> list:
 	end = (start + timedelta(weeks=2)).strftime("%Y.%m.%d")
 	start = start.strftime("%Y.%m.%d")
@@ -266,10 +271,9 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 				date=date_to_db,
 				data=True,
 				group=get_user_group(query.message))
-
 			__text = str()
 			for num, subject in enumerate(available_homework):
-				__text += f'{str(num + 1)}) ' + subject[0].capitalize() + ': ' + subject[1] + '\n'
+				__text += f'{str(num + 1)}) ' + subject[0] + ': ' + subject[1] + '\n'
 			await query.message.answer(
 				text=f'*📅 {days_of_week[days[day] + 1]} {date_to_db}*\n`{__text}`',
 				parse_mode='markdown'
@@ -320,7 +324,7 @@ async def all_week_homework(call: types.CallbackQuery, state: FSMContext):
 
 			for num, subject in enumerate(available_homework):
 				__text += \
-					f'{str(num + 1)}) ' + subject[0].capitalize() + ': ' + subject[1] + '\n'
+					f'{str(num + 1)}) ' + subject[0] + ': ' + subject[1] + '\n'
 			if not __text:
 				__text = '*Никто не заполнил домашнее задания на этот день* 😭'
 			else:
