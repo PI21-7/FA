@@ -1,7 +1,9 @@
 import datetime
+from typing import Tuple
 
 
-def week_definition(count, debug=False):
+def week_definition(count: int, debug=False) -> datetime.date or Tuple[str, str]:
+    """Вывод даты для объявления начала и конца недели"""
     current_date = datetime.date.today()
     week_day = datetime.timedelta(days=current_date.weekday())
     end_week = datetime.timedelta(days=6)

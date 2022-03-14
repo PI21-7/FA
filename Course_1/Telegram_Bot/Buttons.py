@@ -3,11 +3,12 @@ from transliterate import translit
 
 
 def create_subjects_keyboard(schedule: list or set):
+    """Генерация инлайнов доступных предметов"""
     buttons_list = []
     for item in schedule:
         item: str
         buttons_list.append([InlineKeyboardButton(text=item, callback_data=translit(
-            item, language_code='ru', reversed=True))])
+            item, language_code='ru', reversed=True)[:len(item) // 2 + 1])])
     keyboard_inline_buttons = InlineKeyboardMarkup(inline_keyboard=buttons_list)
     return keyboard_inline_buttons
 
