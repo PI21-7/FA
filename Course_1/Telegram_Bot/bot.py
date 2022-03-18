@@ -103,7 +103,6 @@ async def process_date(message: types.Message, state: FSMContext):
 		parse_mode="markdown", reply_markup=Buttons.Inline_Date)
 
 
-
 @dp.callback_query_handler(lambda query: 'Inline' not in query.data, state=SelfState.Edit_state)
 async def add_homework_subject(query: types.CallbackQuery, state: FSMContext):
 	try:
@@ -146,7 +145,7 @@ async def group_state_command(message: types.Message, state: FSMContext):
 	await message.answer("Нажми на кнопку, чтобы получить домашнее задание.", reply_markup=Buttons.answer_start)
 	chat_id = message.chat.id
 	user_group = message.text.upper()
-	UDB.add_user(chat_id=chat_id, user_group=user_group)
+	UDB.add_user(chat_id=chat_id, user_group=user_group, username=message.from_user.username)
 
 
 @dp.message_handler(lambda message: message.text == 'Управление заданиями', state="*")
@@ -181,10 +180,11 @@ async def add_homework_state(call: types.CallbackQuery):
 	)
 
 
-@dp.message_handler(state=SelfState.Add_state)
+@dp.message_handler(state=SelfState.Add_state, content_types=[types.ContentType.TEXT, types.ContentType.DOCUMENT])
 async def add_homework(message: types.Message, state: FSMContext):
 	text = message.text
 	print(message.from_user.username, 'добавил:\n', text)
+	User_group = get_user_group(message)
 	try:
 		async with state.proxy() as data:
 			Date = data['date']
@@ -196,6 +196,9 @@ async def add_homework(message: types.Message, state: FSMContext):
 		return
 	await state.finish()
 	Exercise = text
+	if message.document is not None and message.document.file_id is not None:
+		HDB.attach_file(date=Date, filename=message.document.file_id, group=User_group)
+		Exercise = message.caption
 	await message.answer(
 		text='*{}*'.format(
 			HDB.add_homework(
@@ -203,8 +206,7 @@ async def add_homework(message: types.Message, state: FSMContext):
 				date=Date,
 				text=Exercise,
 				username=message.from_user.username,
-				group=get_user_group(message))),
-		parse_mode='markdown')
+				group=User_group)), parse_mode='markdown')
 	try:
 		await bot.delete_message(message.chat.id, message_id=message.message_id - 1)
 	except aiogram.utils.exceptions.MessageToDeleteNotFound:
@@ -233,7 +235,6 @@ async def edit_homework(message: types.Message, state: FSMContext):
 	async with state.proxy() as data:
 		Date = data['date']
 		Subject = data['subject']
-	print(Date, Subject, get_user_group(message))
 	if HDB.is_exists(date=Date, subject_name=Subject, group=get_user_group(message)):
 		print(message.from_user.username, 'отредактировал:\n', text)
 		HDB.delete_homework(subject_name=Subject, date=Date, group=get_user_group(message))
@@ -340,10 +341,19 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 			__text = str()
 			for num, subject in enumerate(available_homework):
 				__text += f'{str(num + 1)}) ' + subject[0] + ': ' + subject[1] + '\n'
-			await query.message.answer(
-				text=f'*📅 {days_of_week[days[day] + 1]} {date_to_db}*\n`{__text}`',
-				parse_mode='markdown'
-			)
+			TEXT = f'*📅 {days_of_week[days[day] + 1]} {date_to_db}*\n`{__text}`'
+			if HDB.is_file_attached(date=date_to_db, group=get_user_group(query.message)):
+				document = HDB.get_attachments(group=get_user_group(query.message), date=date_to_db)
+				await bot.send_document(
+					chat_id=query.message.chat.id,
+					document=document,
+					caption=TEXT,
+					parse_mode='markdown')
+			else:
+				await query.message.answer(
+					text=TEXT,
+					parse_mode='markdown'
+				)
 			try:
 				await bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
 			except aiogram.utils.exceptions.MessageToDeleteNotFound:
@@ -383,9 +393,18 @@ async def all_week_homework(call: types.CallbackQuery, state: FSMContext):
 				__text = '*Никто не заполнил домашнее задания на этот день* 😭'
 			else:
 				__text = '`' + __text + '`'
-			await call.message.answer(
-				text=f'*📅 {days_of_week[day + 1]} {current_day}*\n{__text}',
-				parse_mode='markdown')
+			MESSAGE = f'*📅 {days_of_week[day + 1]} {current_day}*\n{__text}'
+			if HDB.is_file_attached(group=get_user_group(call.message), date=current_day):
+				document = HDB.get_attachments(group=get_user_group(call.message), date=current_day)
+				await bot.send_document(
+					chat_id=call.message.chat.id,
+					document=document,
+					caption=MESSAGE,
+					parse_mode='markdown')
+			else:
+				await call.message.answer(
+					text=MESSAGE,
+					parse_mode='markdown')
 	except KeyError:
 		await process_start_command(call.message)
 
