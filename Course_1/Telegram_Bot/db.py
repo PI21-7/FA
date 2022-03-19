@@ -124,9 +124,9 @@ class Database(object):
     @Connections.safe
     def get_attachments(self, connection: tuple, date: str, group: str):
         connection, cursor = connection
-        cursor = cursor.execute('''SELECT filename FROM Files WHERE Data = ? and group_name = ?''', (date, group))
+        cursor = cursor.execute('''SELECT ALL filename FROM Files WHERE Data = ? and group_name = ?''', (date, group))
         connection.commit()
-        return cursor.fetchall()[0][0]
+        return cursor.fetchall()
 
     @Connections.safe
     def edit_homework(self, connection: tuple, subject_name: str, date: str, text: str, group: str):
