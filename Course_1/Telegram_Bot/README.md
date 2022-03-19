@@ -1,7 +1,7 @@
 <img src="https://anexp.ru/Антиплагиат%20финансовый%20университет.png" align="right" width="256px"/>
 
 
-## FA HOMEWORK BOT
+# FA HOMEWORK BOT
 
 * [**Используемые технологии**](#Используемые-технологии)
 * [**Как пользоваться?**](#Как-пользоваться?)
@@ -12,7 +12,7 @@
 * **SQLite3** [<img align="left" width="22px" src="https://cdn1.iconfinder.com/data/icons/hawcons/32/700048-icon-89-document-file-sql-256.png"/>][SQLite]
 * **Transliterate module** [<img align="left" width="22px" src="https://cdn2.iconfinder.com/data/icons/humano2/128x128/apps/character-set.png"/>][transliterate]
 
-
+### Как пользоваться?
 
 
 [SQLite]: https://www.sqlite.org/docs.html
