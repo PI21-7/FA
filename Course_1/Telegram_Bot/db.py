@@ -29,11 +29,11 @@ class Database(object):
             connection.commit()
 
         @Connections.safe
-        def add_user(self, connection: tuple, chat_id: str, user_group: str):
+        def add_user(self, connection: tuple, chat_id: str, user_group: str, username: str):
             connection, cursor = connection
             try:
-                cursor.execute('''INSERT INTO Users (chat_id, user_group) VALUES (?, ?)''',
-                               (chat_id, user_group.upper()))
+                cursor.execute('''INSERT INTO Users (chat_id, user_group, username) VALUES (?, ?, ?)''',
+                               (chat_id, user_group.upper(), username))
             except sqlite3.IntegrityError:
                 cursor.execute('''UPDATE Users SET user_group = ? WHERE chat_id = ?;''', (user_group, chat_id))
             finally:
@@ -62,8 +62,23 @@ class Database(object):
         connection.commit()
 
     @Connections.safe
+    def attach_file(self, connection: tuple, date: str, filename: str, group: str):
+        connection, cursor = connection
+
+        cursor.execute('''INSERT INTO Files (Data, filename, group_name) VALUES (?, ?, ?)''', (date, filename, group))
+        connection.commit()
+
+    @Connections.safe
+    def is_file_attached(self, connection: tuple, date: str, group: str):
+        connection, cursor = connection
+        cursor = cursor.execute('''SELECT filename FROM Files WHERE Data = ? AND  group_name = ?''', (date, group))
+        if cursor.fetchall():
+            return True
+        return False
+
+    @Connections.safe
     def add_homework(self, connection: tuple, subject_name: str,
-                     text: str, date: str, username: str, group: str, edit: bool=False) -> str:
+                     text: str, date: str, username: str, group: str, edit: bool = False) -> str:
         connection, cursor = connection
         # Записываем
         cursor.execute('''INSERT INTO Homework (subject_id, date, text, "Group", Author) VALUES (?, ?, ?, ?, ?)''',
@@ -105,6 +120,13 @@ class Database(object):
         if not answer:
             return answer
         return answer[0][0]
+
+    @Connections.safe
+    def get_attachments(self, connection: tuple, date: str, group: str):
+        connection, cursor = connection
+        cursor = cursor.execute('''SELECT ALL filename FROM Files WHERE Data = ? and group_name = ?''', (date, group))
+        connection.commit()
+        return cursor.fetchall()
 
     @Connections.safe
     def edit_homework(self, connection: tuple, subject_name: str, date: str, text: str, group: str):

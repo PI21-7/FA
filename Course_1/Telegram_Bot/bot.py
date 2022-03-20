@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 from datetime import timedelta
 
@@ -21,6 +22,7 @@ class SelfState(StatesGroup):
 	Group_state = State()
 	Add_state = State()
 	Edit_state = State()
+	Parse_state = State()
 
 
 storage = MemoryStorage()
@@ -41,11 +43,6 @@ days_of_week = {
 
 def get_user_group(message: types.Message):
 	return UDB.get_user_group(chat_id=message.chat.id)[0][0]
-
-
-@dp.message_handler(lambda message: message.from_user.username == 'lexus_20013')
-async def ban_list(message: types.Message):
-	await bot.send_sticker(chat_id=message.chat.id, sticker='CAACAgIAAxkBAAEEIkRiLSC1ulNm9d8Y1IXYO7qlrPnmmQACLQADgzHTFIsV3PfSfsqdIwQ')
 
 
 def get_group_schedule(group: str, start: datetime.date) -> list:
@@ -96,6 +93,18 @@ async def add_homework_subject(query: types.CallbackQuery, state: FSMContext):
 		print(e)
 
 
+@dp.message_handler(lambda message: message.text == 'Получить задание!',  state="*")
+async def process_date(message: types.Message, state: FSMContext):
+	print(message.from_user.username, 'получает задание')
+	await state.finish()
+	async with state.proxy() as data:
+		data['date_count'] = 0
+		data["state"] = False
+	await message.answer(
+		f"*Выбираем день недели\n📅 {week_definition(0)[0]} - {week_definition(0)[1]} 📅*",
+		parse_mode="markdown", reply_markup=Buttons.Inline_Date)
+
+
 @dp.callback_query_handler(lambda query: 'Inline' not in query.data, state=SelfState.Edit_state)
 async def add_homework_subject(query: types.CallbackQuery, state: FSMContext):
 	try:
@@ -137,8 +146,8 @@ async def group_state_command(message: types.Message, state: FSMContext):
 	await state.finish()
 	await message.answer("Нажми на кнопку, чтобы получить домашнее задание.", reply_markup=Buttons.answer_start)
 	chat_id = message.chat.id
-	user_group = message.text
-	UDB.add_user(chat_id=chat_id, user_group=user_group)
+	user_group = message.text.upper()
+	UDB.add_user(chat_id=chat_id, user_group=user_group, username=message.from_user.username)
 
 
 @dp.message_handler(lambda message: message.text == 'Управление заданиями', state="*")
@@ -173,10 +182,15 @@ async def add_homework_state(call: types.CallbackQuery):
 	)
 
 
-@dp.message_handler(state=SelfState.Add_state)
+@dp.message_handler(state=SelfState.Parse_state, content_types=types.ContentType.DOCUMENT)
+async def parse_attachments(message: types.Message, state: FSMContext):
+	async with state.proxy() as data:
+		Date = data['date']
+	HDB.attach_file(date=Date, filename=message.document.file_id, group=get_user_group(message))
+
+
+@dp.message_handler(state=SelfState.Add_state, content_types=[types.ContentType.TEXT, types.ContentType.DOCUMENT])
 async def add_homework(message: types.Message, state: FSMContext):
-	text = message.text
-	print(message.from_user.username, 'добавил:\n', text)
 	try:
 		async with state.proxy() as data:
 			Date = data['date']
@@ -185,18 +199,31 @@ async def add_homework(message: types.Message, state: FSMContext):
 	except KeyError:
 		await message.answer(text='Ну ладно 🥺', parse_mode='markdown')
 		await state.finish()
-		return
-	await state.finish()
+		return Ellipsis
+	if HDB.is_exists(subject_name=Subject, date=Date, group=get_user_group(message)):
+		await message.reply(text='*Мы уже записывали задание на этот день и на это предмет :)*', parse_mode='markdown')
+		await state.finish()
+		return Ellipsis
+
+	text = message.text
+	print(message.from_user.username, 'добавил:\n', text if text is not None else message.caption)
+	User_group = get_user_group(message)
 	Exercise = text
-	await message.answer(
-		text='*{}*'.format(
-			HDB.add_homework(
-				subject_name=Subject,
-				date=Date,
-				text=Exercise,
-				username=message.from_user.username,
-				group=get_user_group(message))),
-		parse_mode='markdown')
+	if message.document is not None and message.document.file_id is not None:
+		await SelfState.Parse_state.set()
+		HDB.attach_file(date=Date, filename=message.document.file_id, group=User_group)
+		Exercise = message.caption if message.caption is not None else Exercise
+	else:
+		await state.finish()
+	if Exercise is not None:
+		await message.answer(
+			text='*{}*'.format(
+				HDB.add_homework(
+					subject_name=Subject,
+					date=Date,
+					text=Exercise,
+					username=message.from_user.username,
+					group=User_group)), parse_mode='markdown')
 	try:
 		await bot.delete_message(message.chat.id, message_id=message.message_id - 1)
 	except aiogram.utils.exceptions.MessageToDeleteNotFound:
@@ -225,7 +252,6 @@ async def edit_homework(message: types.Message, state: FSMContext):
 	async with state.proxy() as data:
 		Date = data['date']
 		Subject = data['subject']
-	print(Date, Subject, get_user_group(message))
 	if HDB.is_exists(date=Date, subject_name=Subject, group=get_user_group(message)):
 		print(message.from_user.username, 'отредактировал:\n', text)
 		HDB.delete_homework(subject_name=Subject, date=Date, group=get_user_group(message))
@@ -265,7 +291,7 @@ async def add_homework_date(query: types.CallbackQuery, state: FSMContext):
 
 
 @dp.callback_query_handler(lambda query: query.data.split('_')[2][0] == 'B', state=SelfState.Edit_state)
-async def add_homework_date(query: types.CallbackQuery, state: FSMContext):
+async def edit_homework_date(query: types.CallbackQuery, state: FSMContext):
 	async with state.proxy() as data:
 		current_state = data['state']
 		date_count = data['date_count']
@@ -279,21 +305,29 @@ async def add_homework_date(query: types.CallbackQuery, state: FSMContext):
 			'Bf': 4,
 			'BSn': 5
 		}
-		start_date = week_definition(date_count, debug=True)
+		start_date, end_date = week_definition(date_count, debug=True), week_definition(date_count)[1]
 		async with state.proxy() as data:
 			data['date'] = (start_date + timedelta(days=days[day])).strftime('%d.%m.%Y')
 			Date = data["date"]
+		start_date = start_date.strftime('%d.%m.%Y')
 		homework = HDB.is_available_homework_by_date(date=Date, group=get_user_group(query.message), data=True)
 		homework = list(map(lambda x: x[0], homework))
 		print(homework)
 		await bot.edit_message_text(
-			text='*Выберите предмет*',
+			text='*Выберите предмет*' if homework else '*Тут ничего нет :(\nДавай выберем другой день лучше?*',
 			chat_id=query.message.chat.id,
 			message_id=query.message.message_id,
 			parse_mode='markdown',
-			reply_markup=Buttons.create_subjects_keyboard(homework)
+			reply_markup=Buttons.create_subjects_keyboard(homework) if homework else None
 		)
-		await SelfState.Edit_state.set()
+		await asyncio.sleep(0.5)
+		if not homework:
+			await bot.send_message(
+				chat_id=query.message.chat.id,
+				text=f"*На какой день задание?\n📅 {start_date} - {end_date} 📅*",
+				reply_markup=Buttons.Inline_Date_ADD,
+				parse_mode="markdown"
+			)
 
 
 @dp.callback_query_handler(lambda query: query.data.split('_')[2][0] == 'B')
@@ -332,10 +366,20 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 			__text = str()
 			for num, subject in enumerate(available_homework):
 				__text += f'{str(num + 1)}) ' + subject[0] + ': ' + subject[1] + '\n'
+			TEXT = f'*📅 {days_of_week[days[day] + 1]} {date_to_db}*\n`{__text}`'
 			await query.message.answer(
-				text=f'*📅 {days_of_week[days[day] + 1]} {date_to_db}*\n`{__text}`',
+				text=TEXT,
 				parse_mode='markdown'
 			)
+			if HDB.is_file_attached(date=date_to_db, group=get_user_group(query.message)):
+				attachments = HDB.get_attachments(group=get_user_group(query.message), date=date_to_db)
+				print(attachments)
+				for pos, document in enumerate(attachments):
+					await bot.send_document(
+						chat_id=query.message.chat.id,
+						document=document[0],
+						caption=None,
+						parse_mode='markdown')
 			try:
 				await bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
 			except aiogram.utils.exceptions.MessageToDeleteNotFound:
@@ -347,18 +391,6 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 
 	except KeyError:
 		await process_start_command(query.message)
-
-
-@dp.message_handler(lambda message: message.text == 'Получить задание!',  state="*")
-async def process_date(message: types.Message, state: FSMContext):
-	print(message.from_user.username, 'получает задание')
-	await state.finish()
-	async with state.proxy() as data:
-		data['date_count'] = 0
-		data["state"] = False
-	await message.answer(
-		f"*Выбираем день недели\n📅 {week_definition(0)[0]} - {week_definition(0)[1]} 📅*",
-		parse_mode="markdown", reply_markup=Buttons.Inline_Date)
 
 
 @dp.callback_query_handler(text='Inline_Date_Week', state='*')
@@ -387,9 +419,19 @@ async def all_week_homework(call: types.CallbackQuery, state: FSMContext):
 				__text = '*Никто не заполнил домашнее задания на этот день* 😭'
 			else:
 				__text = '`' + __text + '`'
+			MESSAGE = f'*📅 {days_of_week[day + 1]} {current_day}*\n{__text}'
 			await call.message.answer(
-				text=f'*📅 {days_of_week[day + 1]} {current_day}*\n{__text}',
+				text=MESSAGE,
 				parse_mode='markdown')
+			if HDB.is_file_attached(group=get_user_group(call.message), date=current_day):
+				attachments = HDB.get_attachments(group=get_user_group(call.message), date=current_day)
+				print(attachments)
+				for pos, document in enumerate(attachments):
+					await bot.send_document(
+						chat_id=call.message.chat.id,
+						document=document[0],
+						caption=None,
+						parse_mode='markdown')
 	except KeyError:
 		await process_start_command(call.message)
 
