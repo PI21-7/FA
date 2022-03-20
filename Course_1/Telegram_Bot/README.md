@@ -49,6 +49,12 @@
 
 ![Gettin_hw](md%20images/gettin_hw.png)
 
+![HW](md%20images/HW.png)
+
+![Managing](md%20images/manage.png)
+
+
+
 
 [SQLite]: https://www.sqlite.org/docs.html
 [aiogram]: https://github.com/aiogram/aiogram 
