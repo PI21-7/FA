@@ -4,7 +4,7 @@ from typing import List, Tuple
 
 
 class Connections(object):
-    database = 'Files.db'
+    database = 'Homework.db'
 
     @staticmethod
     def safe(func):

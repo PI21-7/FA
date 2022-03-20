@@ -9,6 +9,7 @@
 * [**О проекте**](#О-проекте)
   * [**Deploy**](#Deploy)
   * [**Структура**](#Структура)
+* [**Иллюстрации**](#Иллюстрации)
 ### Используемые технологии
 * **Aiogram Framework** [<img align="left" width="22px" src="https://cdn4.iconfinder.com/data/icons/social-media-and-logos-11/32/Logo_telegram_Airplane_Air_plane_paper_airplane-22-256.png"/>][aiogram]
 * **SQLite3** [<img align="left" width="22px" src="https://cdn1.iconfinder.com/data/icons/hawcons/32/700048-icon-89-document-file-sql-256.png"/>][SQLite]
