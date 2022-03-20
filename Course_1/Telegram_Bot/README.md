@@ -44,7 +44,10 @@
 * `create config.bat`: **Файл инициализации `config.py` с добавлением `TOKEN` и `green_list` из консоли**
 * `Tests`: **Тесты на проверку инициализации баз данных**
 ### Иллюстрации
-![Start](/Course_1/Telegram_Bot/md%20images/start.png)
+
+![Start](md%20images/start.png)
+
+![Gettin_hw](md%20images/gettin_hw.png)
 
 
 [SQLite]: https://www.sqlite.org/docs.html
