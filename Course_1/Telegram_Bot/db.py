@@ -46,6 +46,21 @@ class Database(object):
             connection.commit()
             return cursor
 
+    class FilesDB(object):
+        @Connections.safe
+        def init(self, connection: tuple):
+            connection, cursor = connection
+            cursor.execute('''
+            create table if not exists Files
+            (
+                id         INTEGER primary key,
+                Data       TEXT,
+                filename   TEXT,
+                group_name TEXT
+            );
+            ''')
+            connection.commit()
+
     @Connections.safe
     def init(self, connection: tuple, name: str = 'Homework') -> None:
         connection, cursor = connection
@@ -65,7 +80,7 @@ class Database(object):
     def attach_file(self, connection: tuple, date: str, filename: str, group: str):
         connection, cursor = connection
 
-        cursor.execute('''INSERT INTO Files (Data, filename, group_name) VALUES (?, ?, ?)''', (date, filename, group))
+        cursor.execute('''INSERT INTO Files (DATA, FILENAME, GROUP_NAME) VALUES (?, ?, ?)''', (date, filename, group))
         connection.commit()
 
     @Connections.safe
