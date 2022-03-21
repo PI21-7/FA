@@ -118,6 +118,7 @@ async def add_homework_subject(query: types.CallbackQuery, state: FSMContext):
 			lambda x: tr.translit(x, language_code='ru', reversed=True), schedule))
 		subject = None
 		for pos, let in enumerate(transliterated_schedule):
+			print(let)
 			if query.data == let:
 				subject = schedule[pos]
 		if subject is None:
