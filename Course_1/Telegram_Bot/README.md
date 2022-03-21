@@ -54,6 +54,8 @@
 
 ![Managing](md%20images/manage.png)
 
+![Schedule](md%20images/Schedule.png)
+
 
 
 
