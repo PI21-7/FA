@@ -34,7 +34,7 @@ class Schedule(object):
             return request.json()[0]["id"]
 
     @classmethod
-    def get_group_schedule(cls, group: str, start: date = None, end: date = None) -> List[dict]:
+    def get_group_schedule(cls, group: str, start: str = None, end: str = None) -> List[dict]:
         if start is None:
             start, end = cls.__current_week()
         group = cls.__group_id(group)
