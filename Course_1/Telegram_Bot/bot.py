@@ -75,7 +75,7 @@ async def add_homework_subject(query: types.CallbackQuery, state: FSMContext):
 			lambda x: tr.translit(x, language_code='ru', reversed=True), schedule))
 		subject = None
 		for pos, let in enumerate(transliterated_schedule):
-			if query.data == let[len(let) // 2 + 1:]:
+			if query.data in let:
 				subject = schedule[pos]
 		if subject is None:
 			async with state.proxy() as data:
@@ -119,7 +119,7 @@ async def add_homework_subject(query: types.CallbackQuery, state: FSMContext):
 			lambda x: tr.translit(x, language_code='ru', reversed=True), schedule))
 		subject = None
 		for pos, let in enumerate(transliterated_schedule):
-			if query.data == let[len(let) // 2 + 1:]:
+			if query.data in let:
 				subject = schedule[pos]
 		if subject is None:
 			async with state.proxy() as data:
