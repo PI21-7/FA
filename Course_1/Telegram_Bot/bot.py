@@ -76,7 +76,7 @@ async def add_homework_subject(query: types.CallbackQuery, state: FSMContext):
 			lambda x: tr.translit(x, language_code='ru', reversed=True), schedule))
 		subject = None
 		for pos, let in enumerate(transliterated_schedule):
-			if query.data == let[len(let) // 2 + 1:]:
+			if query.data in let:
 				print(True)
 				subject = schedule[pos]
 		if subject is None:
@@ -121,7 +121,7 @@ async def add_homework_subject(query: types.CallbackQuery, state: FSMContext):
 			lambda x: tr.translit(x, language_code='ru', reversed=True), schedule))
 		subject = None
 		for pos, let in enumerate(transliterated_schedule):
-			if query.data == let[len(let) // 2 + 1:]:
+			if query.data in let:
 				subject = schedule[pos]
 				break
 		async with state.proxy() as data:
@@ -169,7 +169,7 @@ async def delete_homework(query: types.CallbackQuery, state: FSMContext):
 		lambda x: tr.translit(x, language_code='ru', reversed=True), schedule))
 	subject = None
 	for pos, let in enumerate(transliterated_schedule):
-		if query.data == let[len(let) // 2 + 1:]:
+		if query.data in let:
 			subject = schedule[pos]
 			break
 	group = get_user_group(message)
@@ -453,7 +453,6 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 			)
 			if HDB.is_file_attached(date=date_to_db, group=get_user_group(query.message)):
 				attachments = HDB.get_attachments(group=get_user_group(query.message), date=date_to_db)
-				print(attachments)
 				for pos, document in enumerate(attachments):
 					await bot.send_document(
 						chat_id=query.message.chat.id,
