@@ -7,7 +7,7 @@ def create_subjects_keyboard(schedule: list or set):
     for item in schedule:
         item: str
         buttons_list.append([InlineKeyboardButton(text=item, callback_data=translit(
-            item[len(item) // 2 + 1:], language_code='ru', reversed=True))])
+            item[len(item) // 2:], language_code='ru', reversed=True))])
     keyboard_inline_buttons = InlineKeyboardMarkup(inline_keyboard=buttons_list)
     return keyboard_inline_buttons
 
