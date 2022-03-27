@@ -8,6 +8,13 @@ class Connections(object):
 
     @staticmethod
     def safe(func):
+        print(func.__name__)
+        function_name = func.__name__
+        if 'users' in function_name:
+            Connections.database = 'Users.db'
+        elif 'files' in function_name:
+            Connections.database = 'Files.db'
+
         def inside(*args, **kwargs):
             with sqlite3.connect(Connections.database) as connection:
                 result = func(*args, connection=(connection, connection.cursor()), **kwargs)
@@ -19,7 +26,7 @@ class Database(object):
 
     class UsersDB(object):
         @Connections.safe
-        def init(self, connection: tuple):
+        def users_init(self, connection: tuple):
             connection, cursor = connection
             cursor.execute('''create table if not exists Users (
             id          INTEGER primary key,
@@ -48,7 +55,7 @@ class Database(object):
 
     class FilesDB(object):
         @Connections.safe
-        def init(self, connection: tuple):
+        def files_init(self, connection: tuple):
             connection, cursor = connection
             cursor.execute('''
             create table if not exists Files

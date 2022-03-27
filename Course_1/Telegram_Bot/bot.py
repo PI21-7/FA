@@ -29,7 +29,6 @@ storage = MemoryStorage()
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=storage)
 HDB = Database()
-HDB.init()
 UDB = Database.UsersDB()
 
 days_of_week = {
