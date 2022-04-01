@@ -63,6 +63,8 @@
 
 ![Schedule](md%20images/Schedule.png)
 
+![Database-Schema](md%20images/DB-Schema.png)
+
 
 ### TODO
 1) ~~**Сделать удаление домашних заданий**~~

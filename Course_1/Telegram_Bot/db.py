@@ -1,20 +1,33 @@
 import sqlite3
+import typing
 
 from typing import List, Tuple
 
 
+class DatabaseInterface(typing.Protocol):
+    class UsersDB(object):
+        def user_init(self): ...
+        def add_user(self): ...
+        def get_user_group(self): ...
+
+    class FilesDB(object):
+        def files_init(self): ...
+
+    def init(self): ...
+    def attach_file(self): ...
+    def is_file_attached(self): ...
+    def is_available_homework_by_date(self): ...
+    def is_exists(self): ...
+    def receive_homework(self): ...
+    def get_attachments(self): ...
+    def edit_homework(self): ...
+
+
 class Connections(object):
-    database = 'Homework.db'
+    database = 'FA.db'
 
     @staticmethod
     def safe(func):
-        print(func.__name__)
-        function_name = func.__name__
-        if 'users' in function_name:
-            Connections.database = 'Users.db'
-        elif 'files' in function_name:
-            Connections.database = 'Files.db'
-
         def inside(*args, **kwargs):
             with sqlite3.connect(Connections.database) as connection:
                 result = func(*args, connection=(connection, connection.cursor()), **kwargs)
@@ -22,57 +35,30 @@ class Connections(object):
         return inside
 
 
-class Database(object):
-
-    class UsersDB(object):
-        @Connections.safe
-        def users_init(self, connection: tuple):
-            connection, cursor = connection
-            cursor.execute('''create table if not exists Users (
-            id          INTEGER primary key,
-            chat_id     TEXT not null,
-            user_group  TEXT not null 
-            )''')
-            connection.commit()
-
-        @Connections.safe
-        def add_user(self, connection: tuple, chat_id: str, user_group: str, username: str):
-            connection, cursor = connection
-            try:
-                cursor.execute('''INSERT INTO Users (chat_id, user_group, username) VALUES (?, ?, ?)''',
-                               (chat_id, user_group.upper(), username))
-            except sqlite3.IntegrityError:
-                cursor.execute('''UPDATE Users SET user_group = ? WHERE chat_id = ?;''', (user_group, chat_id))
-            finally:
-                connection.commit()
-
-        @Connections.safe
-        def get_user_group(self, connection: tuple, chat_id: str) -> str:
-            connection, cursor = connection
-            cursor = cursor.execute('''SELECT user_group FROM Users WHERE chat_id = ?''', (chat_id,)).fetchall()
-            connection.commit()
-            return cursor
-
-    class FilesDB(object):
-        @Connections.safe
-        def files_init(self, connection: tuple):
-            connection, cursor = connection
-            cursor.execute('''
-            create table if not exists Files
-            (
-                id         INTEGER primary key,
-                Data       TEXT,
-                filename   TEXT,
-                group_name TEXT
-            );
-            ''')
+class Database(DatabaseInterface):
+    @Connections.safe
+    def add_user(self, connection: tuple, chat_id: str, user_group: str, username: str):
+        connection, cursor = connection
+        try:
+            cursor.execute('''INSERT INTO Users (chat_id, user_group, username) VALUES (?, ?, ?)''',
+                           (chat_id, user_group.upper(), username))
+        except sqlite3.IntegrityError:
+            cursor.execute('''UPDATE Users SET user_group = ? WHERE chat_id = ?;''', (user_group, chat_id))
+        finally:
             connection.commit()
 
     @Connections.safe
-    def init(self, connection: tuple, name: str = 'Homework') -> None:
+    def get_user_group(self, connection: tuple, chat_id: str) -> str:
+        connection, cursor = connection
+        cursor = cursor.execute('''SELECT user_group FROM Users WHERE chat_id = ?''', (chat_id,)).fetchall()
+        connection.commit()
+        return cursor
+
+    @Connections.safe
+    def init(self, connection: tuple) -> None:
         connection, cursor = connection
         cursor.execute(
-            f'create table if not exists {name}('
+            f'create table if not exists Homework('
             f'id         INTEGER primary key,'
             f'subject_id int  not null,'
             f'date       text not null,'
@@ -80,6 +66,20 @@ class Database(object):
             f'"Group"    text not null,'
             f'Author     text not null)'
         )
+        cursor.execute('''
+        create table if not exists Files
+        (
+            id         INTEGER primary key,
+            Data       TEXT,
+            filename   TEXT,
+            group_name TEXT
+        );
+        ''')
+        cursor.execute('''create table if not exists Users (
+        id          INTEGER primary key,
+        chat_id     TEXT not null,
+        user_group  TEXT not null 
+        )''')
 
         connection.commit()
 

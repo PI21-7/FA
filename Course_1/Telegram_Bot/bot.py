@@ -1,65 +1,19 @@
-import asyncio
-import datetime
-from datetime import timedelta
-
-from Schedule import Schedule
-import transliterate as tr
-import aiogram.utils.exceptions
-from aiogram import Bot, types
-from aiogram.dispatcher import Dispatcher
-from aiogram.utils import executor
-
-from config import *
-import Buttons
-from db import Database
-from date import week_definition
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
-
-
-class SelfState(StatesGroup):
-	Group_state = State()
-	Add_state = State()
-	Edit_state = State()
-	Delete_state = State()
-	Parse_state = State()
-
-
-storage = MemoryStorage()
-bot = Bot(token=TOKEN)
-dp = Dispatcher(bot, storage=storage)
-HDB = Database()
-UDB = Database.UsersDB()
-
-days_of_week = {
-	1: 'Понедельник',
-	2: 'Вторник',
-	3: 'Среда',
-	4: 'Четверг',
-	5: 'Пятница',
-	6: 'Суббота'
-}
-
-
-def get_user_group(message: types.Message):
-	return UDB.get_user_group(chat_id=message.chat.id)[0][0]
-
-
-def get_group_schedule(group: str, start: datetime.date) -> list:
-	end = (start + timedelta(weeks=2)).strftime("%Y.%m.%d")
-	start = start.strftime("%Y.%m.%d")
-	schedule = Schedule.get_group_schedule(group=group, start=start, end=end)
-	lessons = set()
-	for i in schedule:
-		if i['discipline'] == 'Элективные дисциплины по физической культуре и спорту':
-			continue
-		lessons.add(
-			i['discipline'] + ' ' + i['lecturer_title'].split()[0]
-			if i['discipline'] == 'Иностранный язык'
-			else i['discipline'])
-
-	return list(lessons)
+############################################
+import asyncio							   #
+import datetime							   #
+import transliterate as tr				   #
+import Utils.Buttons as Buttons			   #
+import aiogram.utils.exceptions			   #
+############################################
+from config import *					   #
+from Utils.Maintenance import *			   #
+############################################
+from datetime import timedelta			   #
+from aiogram import types				   #
+from aiogram.utils import executor		   #
+from Utils.date import week_definition	   #
+from aiogram.dispatcher import FSMContext  #
+############################################
 
 
 @dp.callback_query_handler(lambda query: 'Inline' not in query.data, state=SelfState.Add_state)
@@ -76,7 +30,6 @@ async def add_homework_subject(query: types.CallbackQuery, state: FSMContext):
 		subject = None
 		for pos, let in enumerate(transliterated_schedule):
 			if query.data in let:
-				print(True)
 				subject = schedule[pos]
 		if subject is None:
 			async with state.proxy() as data:
@@ -223,7 +176,7 @@ async def group_state_command(message: types.Message, state: FSMContext):
 	await message.answer("Нажми на кнопку, чтобы получить домашнее задание.", reply_markup=Buttons.answer_start)
 	chat_id = message.chat.id
 	user_group = message.text.upper()
-	UDB.add_user(chat_id=chat_id, user_group=user_group, username=message.from_user.username)
+	HDB.add_user(chat_id=chat_id, user_group=user_group, username=message.from_user.username)
 
 
 @dp.message_handler(lambda message: message.text == 'Управление заданиями', state="*")
@@ -338,8 +291,14 @@ async def edit_homework(message: types.Message, state: FSMContext):
 		subject = data['subject']
 	print(message.from_user.username, 'отредактировал:\n', text)
 	HDB.delete_homework(subject_name=subject, date=date, group=get_user_group(message))
+	text = HDB.add_homework(
+		subject_name=subject,
+		username=message.from_user.username,
+		text=text, date=date,
+		group=get_user_group(message),
+		edit=True)
 	await message.answer(
-		text=f'*{HDB.add_homework(subject_name=subject, username=message.from_user.username, text=text, date=date, group=get_user_group(message), edit = True)}*', parse_mode='markdown')
+		text=f'*{text}*', parse_mode='markdown')
 	await state.finish()
 
 
