@@ -23,10 +23,12 @@ Inline_Date_Bf = InlineKeyboardButton(text='Пятница 🍺', callback_data=
 Inline_Date_Sn = InlineKeyboardButton(text='Суббота 😎', callback_data='Inline_Date_BSn')
 Inline_Date_Down = InlineKeyboardButton(text='⏬', callback_data='Inline_Date_Down')
 Inline_Date_Up = InlineKeyboardButton(text='⏫', callback_data='Inline_Date_Up')
+
 Inline_Manage = InlineKeyboardMarkup(inline_keyboard=True)
 Inline_Edit = InlineKeyboardButton(text='Редактировать ДЗ', callback_data='Inline_Edit')
 Inline_Add = InlineKeyboardButton(text='Добавить ДЗ', callback_data='Inline_Add')
-Inline_Manage.add(Inline_Add).add(Inline_Edit)
+Inline_Delete = InlineKeyboardButton(text='Удалить ДЗ', callback_data='Inline_Delete')
+Inline_Manage.add(Inline_Add).add(Inline_Edit).add(Inline_Delete)
 
 Inline_Date_ADD = InlineKeyboardMarkup()
 Inline_Date_ADD.add(Inline_Date_Up).add(Inline_Date_Bm).add(Inline_Date_Bt).add(Inline_Date_Bwd)\
