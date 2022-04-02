@@ -5,7 +5,6 @@ import transliterate as tr				   #
 import Utils.Buttons as Buttons			   #
 import aiogram.utils.exceptions			   #
 ############################################
-from config import *					   #
 from Utils.Maintenance import *			   #
 ############################################
 from datetime import timedelta			   #
@@ -185,7 +184,7 @@ async def process_add_command(message: types.Message, state: FSMContext):
 	async with state.proxy() as data:
 		data['date_count'] = 0
 	print(message.from_user.username, 'управляет заданиями')
-	if message.from_user.username in green_list:
+	if message.from_user.username in green_list():
 		await message.answer(
 			text='*Что будем делать?*',
 			parse_mode='markdown',

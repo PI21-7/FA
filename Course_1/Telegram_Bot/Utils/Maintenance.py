@@ -48,3 +48,10 @@ def get_group_schedule(group: str, start) -> list:
 			else i['discipline'])
 
 	return list(lessons)
+
+
+def green_list(path: str = 'Admin/admins.txt'):
+	with open(path, 'r+', encoding='utf-8') as data:
+		return list(filter(lambda x: '\n' not in x, data.readline().split(',')))
+
+
