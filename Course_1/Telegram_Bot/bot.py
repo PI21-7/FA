@@ -135,14 +135,6 @@ async def delete_homework(query: types.CallbackQuery, state: FSMContext):
 @dp.callback_query_handler(lambda query: query.data.split('_')[2][0] == 'B', state=SelfState.Delete_state)
 async def delete_homework_date(query: types.CallbackQuery, state: FSMContext):
 	day = query.data.split("_")[2]
-	days = {
-		'Bm': 0,
-		'Bt': 1,
-		'Bwd': 2,
-		'Bth': 3,
-		'Bf': 4,
-		'BSn': 5
-	}
 	async with state.proxy() as data:
 		date_count = data['date_count']
 		start_date = week_definition(date_count, debug=True)
@@ -199,7 +191,7 @@ async def process_add_command(message: types.Message, state: FSMContext):
 
 @dp.callback_query_handler(text='Inline_Add')
 async def add_homework_state(call: types.CallbackQuery):
-	start_date = datetime.datetime.now()
+	start_date = datetime.now()
 	await SelfState.Add_state.set()
 	await bot.edit_message_text(
 		chat_id=call.message.chat.id,
@@ -308,14 +300,6 @@ async def add_homework_date(query: types.CallbackQuery, state: FSMContext):
 		date_count = data['date_count']
 	if current_state:
 		day = query.data.split("_")[2]
-		days = {
-			'Bm': 0,
-			'Bt': 1,
-			'Bwd': 2,
-			'Bth': 3,
-			'Bf': 4,
-			'BSn': 5
-		}
 		start_date = week_definition(date_count, debug=True)
 		await bot.edit_message_text(
 			text='*Введите домашнее задание*',
@@ -335,14 +319,7 @@ async def edit_homework_date(query: types.CallbackQuery, state: FSMContext):
 		date_count = data['date_count']
 	if current_state:
 		day = query.data.split("_")[2]
-		days = {
-			'Bm': 0,
-			'Bt': 1,
-			'Bwd': 2,
-			'Bth': 3,
-			'Bf': 4,
-			'BSn': 5
-		}
+
 		start_date, end_date = week_definition(date_count, debug=True), week_definition(date_count)[1]
 		async with state.proxy() as data:
 			data['date'] = (start_date + timedelta(days=days[day])).strftime('%d.%m.%Y')
@@ -374,14 +351,6 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 		async with state.proxy() as data:
 			date_count = data['date_count']
 		start_date = week_definition(date_count, debug=True)
-		days = {
-			'Bm': 0,
-			'Bt': 1,
-			'Bwd': 2,
-			'Bth': 3,
-			'Bf': 4,
-			'BSn': 5
-		}
 		date_to_db = [
 			(start_date + timedelta(days=days[day])).strftime('%d.%m.%y'),
 			(start_date + timedelta(days=days[day])).strftime('%d.%m.%Y')]
@@ -443,11 +412,6 @@ async def all_week_homework(call: types.CallbackQuery, state: FSMContext):
 				data=True)
 			__text = ''
 
-			try:
-				await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-			except aiogram.utils.exceptions.MessageToDeleteNotFound:
-				print('Какое-то сообщение не удаляется(')
-
 			for num, subject in enumerate(available_homework):
 				__text += \
 					f'{str(num + 1)}) ' + subject[0] + ': ' + subject[1] + '\n'
@@ -468,6 +432,10 @@ async def all_week_homework(call: types.CallbackQuery, state: FSMContext):
 						document=document[0],
 						caption=None,
 						parse_mode='markdown')
+		try:
+			await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+		except aiogram.utils.exceptions.MessageToDeleteNotFound:
+			print('Какое-то сообщение не удаляется(')
 	except KeyError:
 		await process_start_command(call.message)
 
