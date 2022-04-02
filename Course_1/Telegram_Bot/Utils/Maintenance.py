@@ -29,6 +29,15 @@ days_of_week = {
 	6: 'Суббота'
 }
 
+days = {
+	'Bm' : 0,
+	'Bt' : 1,
+	'Bwd' : 2,
+	'Bth' : 3,
+	'Bf' : 4,
+	'BSn' : 5
+}
+
 
 def get_user_group(message: types.Message):
 	return HDB.get_user_group(chat_id=message.chat.id)[0][0]
