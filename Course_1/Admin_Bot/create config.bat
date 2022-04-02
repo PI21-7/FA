@@ -8,8 +8,5 @@ set /p Admin="Admin: "
  
 echo TOKEN = r'%TOKEN%' > config.py
 
-mkdir Admin
+echo Admin = ['%Admin%',] >> config.py
 
-cd Admin
-
-echo %Admin%, > admins.txt
