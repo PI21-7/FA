@@ -13,7 +13,10 @@ from aiogram import types				   #
 from aiogram.utils import executor		   #
 from Utils.date import week_definition	   #
 from aiogram.dispatcher import FSMContext  #
+from Utils.debug import Debugger		   #
 ############################################
+
+debugger = Debugger()
 
 
 @dp.message_handler(commands=['start'], state="*")
@@ -102,7 +105,7 @@ async def add_homework_subject(query: types.CallbackQuery, state: FSMContext):
 
 @dp.message_handler(lambda message: message.text == 'Получить задание!',  state="*")
 async def process_date(message: types.Message, state: FSMContext):
-	print(message.from_user.username, 'получает задание')
+	debugger.info(message.from_user.username, 'получает задание')
 	await state.finish()
 	async with state.proxy() as data:
 		data['date_count'] = 0
@@ -144,7 +147,6 @@ async def delete_homework_state(query: types.CallbackQuery, state: FSMContext):
 	async with state.proxy() as data:
 		data['state'] = True
 		date_count = data['date_count']
-		print(data['date_count'])
 	start_date, end_date = week_definition(date_count)
 	await bot.edit_message_text(
 		chat_id=query.message.chat.id,
@@ -171,7 +173,7 @@ async def delete_homework(query: types.CallbackQuery, state: FSMContext):
 			subject = schedule[pos]
 			break
 	group = get_user_group(message)
-	print(message.from_user.username, 'удалил:\n', subject, date, group)
+	debugger.info(message.from_user.username, 'удалил', ' '.join([subject, date, group]))
 	HDB.delete_homework(subject_name=subject, date=date, group=group)
 	await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
 	await message.answer(
@@ -179,7 +181,9 @@ async def delete_homework(query: types.CallbackQuery, state: FSMContext):
 	await state.finish()
 
 
-@dp.callback_query_handler(lambda query: query.data.split('_')[2][0] == 'B', state=SelfState.Delete_state)
+@dp.callback_query_handler(
+	lambda query: query.data.split('_')[2][0] == 'B' if len(query.data.split('_')) > 2 else False,
+	state=SelfState.Delete_state)
 async def delete_homework_date(query: types.CallbackQuery, state: FSMContext):
 	day = query.data.split("_")[2]
 	async with state.proxy() as data:
@@ -222,7 +226,7 @@ async def process_add_command(message: types.Message, state: FSMContext):
 	await state.finish()
 	async with state.proxy() as data:
 		data['date_count'] = 0
-	print(message.from_user.username, 'управляет заданиями')
+	debugger.info(message.from_user.username, 'управляет заданиями')
 	if message.from_user.username in green_list():
 		await message.answer(
 			text='*Что будем делать?*',
@@ -277,7 +281,7 @@ async def add_homework(message: types.Message, state: FSMContext):
 		return Ellipsis
 
 	text = message.text
-	print(message.from_user.username, 'добавил:\n', text if text is not None else message.caption)
+	debugger.info(message.from_user.username, 'добавил', text if text is not None else message.caption)
 	user_group = get_user_group(message)
 	exercise = text
 	if message.document is not None and message.document.file_id is not None:
@@ -327,7 +331,7 @@ async def edit_homework(message: types.Message, state: FSMContext):
 	async with state.proxy() as data:
 		date = data['date']
 		subject = data['subject']
-	print(message.from_user.username, 'отредактировал:\n', text)
+	debugger.info(message.from_user.username, 'отредактировал', text)
 	HDB.delete_homework(subject_name=subject, date=date, group=get_user_group(message))
 	text = HDB.add_homework(
 		subject_name=subject,
@@ -340,34 +344,22 @@ async def edit_homework(message: types.Message, state: FSMContext):
 	await state.finish()
 
 
-@dp.callback_query_handler(lambda query: query.data.split('_')[2][0] == 'B', state=SelfState.Add_state)
-async def add_homework_date(query: types.CallbackQuery, state: FSMContext):
-	async with state.proxy() as data:
-		current_state = data['state']
-		date_count = data['date_count']
-	if current_state:
-		day = query.data.split("_")[2]
-		start_date = week_definition(date_count, debug=True)
-		await bot.edit_message_text(
-			text='*Введите домашнее задание*',
-			chat_id=query.message.chat.id,
-			message_id=query.message.message_id,
-			parse_mode='markdown'
-		)
-		async with state.proxy() as data:
-			data['date'] = (start_date + timedelta(days=days[day])).strftime('%d.%m.%Y')
-		await SelfState.Add_state.set()
-
-
 def register_cq_handlers(dsp: Dispatcher):
 	dsp.register_callback_query_handler(callback=callback_up, text='Inline_Date_Up', state='*')
 	dsp.register_callback_query_handler(callback=callback_down, text='Inline_Date_Up', state='*')
 	dsp.register_callback_query_handler(callback=all_week_homework, text='Inline_Date_Week', state='*')
-	dsp.register_callback_query_handler(homework_reply, lambda query: query.data.split('_')[2][0] == 'B')
+	dsp.register_callback_query_handler(
+		homework_reply,
+		lambda query: query.data.split('_')[2][0] == 'B' if len(query.data.split('_')) > 2 else False)
 	dsp.register_callback_query_handler(
 		edit_homework_date,
-		lambda query: query.data.split('_')[2][0] == 'B',
+		lambda query: query.data.split('_')[2][0] == 'B' if len(query.data.split('_')) > 2 else False,
 		state=SelfState.Edit_state)
+	dsp.register_callback_query_handler(
+		add_homework_date,
+		lambda query: query.data.split('_')[2][0] == 'B' if len(query.data.split('_')) > 2 else False,
+		state=SelfState.Add_state
+	)
 
 
 if __name__ == '__main__':
