@@ -1,0 +1,6 @@
+aiogram==2.19
+PyMySQL==1.0.2
+requests==2.27.1
+transliterate==1.10.2
+urllib3==1.26.9
+yarl==1.7.2

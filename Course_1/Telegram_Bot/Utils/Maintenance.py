@@ -2,9 +2,9 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters.state import StatesGroup, State
 
-from Course_1.Telegram_Bot.Utils.Schedule import *
-from Course_1.Telegram_Bot.config import TOKEN
-from Course_1.Telegram_Bot.db import Database
+from Utils.Schedule import *
+from config import TOKEN
+from db import Database
 
 
 class SelfState(StatesGroup):
@@ -13,6 +13,7 @@ class SelfState(StatesGroup):
 	Edit_state = State()
 	Delete_state = State()
 	Parse_state = State()
+	Materials_state = State()
 
 
 storage = MemoryStorage()
