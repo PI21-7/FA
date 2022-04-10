@@ -1,18 +1,71 @@
 ############################################
-import asyncio							   #
 import datetime							   #
 import transliterate as tr				   #
-import Utils.Buttons as Buttons			   #
 import aiogram.utils.exceptions			   #
 ############################################
 from Utils.Maintenance import *			   #
+from Buttons.Maintenance import *		   #
+from Buttons import Buttons				   #
 ############################################
 from datetime import timedelta			   #
+from datetime import datetime			   #
 from aiogram import types				   #
 from aiogram.utils import executor		   #
 from Utils.date import week_definition	   #
 from aiogram.dispatcher import FSMContext  #
 ############################################
+
+
+@dp.message_handler(commands=['start'], state="*")
+async def process_start_command(message: types.Message):
+	await message.answer("Привет! Для получения задания, скажи из какой ты группы!\n\nНапример: ПИ21-7")
+	await SelfState.Group_state.set()
+
+
+@dp.message_handler(state=SelfState.Parse_state, content_types=types.ContentType.DOCUMENT)
+async def parse_attachments(message: types.Message, state: FSMContext):
+	async with state.proxy() as data:
+		date = data['date']
+	HDB.attach_file(date=date, filename=message.document.file_id, group=get_user_group(message))
+
+
+@dp.message_handler(content_types=types.ContentType.DOCUMENT, state=SelfState.Materials_state)
+async def process_add_material_command(message: types.Message, state: FSMContext):
+	await state.finish()
+	await SelfState.Parse_state.set()
+	if HDB.is_file_attached_materials(group=get_user_group(message), file_name=message.document.file_name):
+		HDB.attach_file_materials(file_id=message.document.file_id, group=get_user_group(message), file_name=message.document.file_name)
+		await message.answer("материалы добавлены")
+	else:
+		await message.answer("этот файл уже добавлен!")
+
+
+@dp.message_handler(state=SelfState.Materials_state)
+async def process_answer_by_document(message: types.Message, state: FSMContext):
+	await state.finish()
+	await message.answer("Надо было отправить просто файл😭")
+
+
+@dp.callback_query_handler(text='Inline_Materials')
+async def materials_state(call: types.CallbackQuery, _state: FSMContext):
+	await bot.send_message(
+			chat_id=call.message.chat.id,
+			text="Прикрепите материалы",
+			parse_mode="markdown"
+		)
+	await SelfState.Materials_state.set()
+
+
+@dp.message_handler(lambda message: message.text == 'Полезные материалы',  state="*")
+async def process_get_materials(message: types.Message, state: FSMContext):
+	await state.finish()
+	attachments = HDB.get_attachments_materials(group=get_user_group(message))
+	for pos, document in enumerate(attachments):
+		await bot.send_document(
+			chat_id=message.chat.id,
+			document=document[0],
+			caption=None,
+			parse_mode='markdown')
 
 
 @dp.callback_query_handler(lambda query: 'Inline' not in query.data, state=SelfState.Add_state)
@@ -84,12 +137,6 @@ async def add_homework_subject(query: types.CallbackQuery, state: FSMContext):
 			parse_mode='markdown')
 	except KeyError as e:
 		print(e)
-
-
-@dp.message_handler(commands=['start'], state="*")
-async def process_start_command(message: types.Message):
-	await message.answer("Привет! Для получения задания, скажи из какой ты группы!\n\nНапример: ПИ21-7")
-	await SelfState.Group_state.set()
 
 
 @dp.callback_query_handler(text='Inline_Delete')
@@ -312,168 +359,17 @@ async def add_homework_date(query: types.CallbackQuery, state: FSMContext):
 		await SelfState.Add_state.set()
 
 
-@dp.callback_query_handler(lambda query: query.data.split('_')[2][0] == 'B', state=SelfState.Edit_state)
-async def edit_homework_date(query: types.CallbackQuery, state: FSMContext):
-	async with state.proxy() as data:
-		current_state = data['state']
-		date_count = data['date_count']
-	if current_state:
-		day = query.data.split("_")[2]
-
-		start_date, end_date = week_definition(date_count, debug=True), week_definition(date_count)[1]
-		async with state.proxy() as data:
-			data['date'] = (start_date + timedelta(days=days[day])).strftime('%d.%m.%Y')
-			date = data["date"]
-		start_date = start_date.strftime('%d.%m.%Y')
-		homework = HDB.is_available_homework_by_date(date=date, group=get_user_group(query.message), data=True)
-		homework = list(map(lambda x: x[0], homework))
-		await bot.edit_message_text(
-			text='*Выберите предмет*' if homework else '*Тут ничего нет :(\nДавай выберем другой день лучше?*',
-			chat_id=query.message.chat.id,
-			message_id=query.message.message_id,
-			parse_mode='markdown',
-			reply_markup=Buttons.create_subjects_keyboard(homework) if homework else None
-		)
-		await asyncio.sleep(0.5)
-		if not homework:
-			await bot.send_message(
-				chat_id=query.message.chat.id,
-				text=f"*На какой день задание?\n📅 {start_date} - {end_date} 📅*",
-				reply_markup=Buttons.Inline_Date_ADD,
-				parse_mode="markdown"
-			)
-
-
-@dp.callback_query_handler(lambda query: query.data.split('_')[2][0] == 'B')
-async def homework_reply(query: types.CallbackQuery, state: FSMContext):
-	day = query.data.split("_")[2]
-	try:
-		async with state.proxy() as data:
-			date_count = data['date_count']
-		start_date = week_definition(date_count, debug=True)
-		date_to_db = [
-			(start_date + timedelta(days=days[day])).strftime('%d.%m.%y'),
-			(start_date + timedelta(days=days[day])).strftime('%d.%m.%Y')]
-
-		if HDB.is_available_homework_by_date(
-				date=date_to_db[0],
-				group=get_user_group(query.message)) or HDB.is_available_homework_by_date(
-			date=date_to_db[1],
-			group=get_user_group(query.message)):
-
-			date_to_db = date_to_db[0] if HDB.is_available_homework_by_date(
-				date=date_to_db[0],
-				group=get_user_group(query.message)) else date_to_db[1]
-
-			available_homework = HDB.is_available_homework_by_date(
-				date=date_to_db,
-				data=True,
-				group=get_user_group(query.message))
-			__text = str()
-			for num, subject in enumerate(available_homework):
-				__text += f'{str(num + 1)}) ' + subject[0] + ': ' + subject[1] + '\n'
-			text = f'*📅 {days_of_week[days[day] + 1]} {date_to_db}*\n`{__text}`'
-			await query.message.answer(
-				text=text,
-				parse_mode='markdown'
-			)
-			if HDB.is_file_attached(date=date_to_db, group=get_user_group(query.message)):
-				attachments = HDB.get_attachments(group=get_user_group(query.message), date=date_to_db)
-				for pos, document in enumerate(attachments):
-					await bot.send_document(
-						chat_id=query.message.chat.id,
-						document=document[0],
-						caption=None,
-						parse_mode='markdown')
-			try:
-				await bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
-			except aiogram.utils.exceptions.MessageToDeleteNotFound:
-				print('Какое-то сообщение не удаляется(')
-		else:
-			await query.message.answer(
-				text='*Никто не заполнил домашнее задания на этот день* 😭', parse_mode='markdown'
-			)
-
-	except KeyError:
-		await process_start_command(query.message)
-
-
-@dp.callback_query_handler(text='Inline_Date_Week', state='*')
-async def all_week_homework(call: types.CallbackQuery, state: FSMContext):
-	try:
-		async with state.proxy() as data:
-			date_count = data['date_count']
-		start_date = week_definition(date_count, debug=True)
-		for day in range(6):
-			current_day = (start_date + timedelta(days=day)).strftime('%d.%m.%Y')
-			available_homework = HDB.is_available_homework_by_date(
-				date=current_day,
-				group=get_user_group(call.message),
-				data=True)
-			__text = ''
-
-			for num, subject in enumerate(available_homework):
-				__text += \
-					f'{str(num + 1)}) ' + subject[0] + ': ' + subject[1] + '\n'
-			if not __text:
-				__text = '*Никто не заполнил домашнее задания на этот день* 😭'
-			else:
-				__text = '`' + __text + '`'
-			message = f'*📅 {days_of_week[day + 1]} {current_day}*\n{__text}'
-			await call.message.answer(
-				text=message,
-				parse_mode='markdown')
-			if HDB.is_file_attached(group=get_user_group(call.message), date=current_day):
-				attachments = HDB.get_attachments(group=get_user_group(call.message), date=current_day)
-				print(attachments)
-				for pos, document in enumerate(attachments):
-					await bot.send_document(
-						chat_id=call.message.chat.id,
-						document=document[0],
-						caption=None,
-						parse_mode='markdown')
-		try:
-			await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-		except aiogram.utils.exceptions.MessageToDeleteNotFound:
-			print('Какое-то сообщение не удаляется(')
-	except KeyError:
-		await process_start_command(call.message)
-
-
-@dp.callback_query_handler(text="Inline_Date_Down", state='*')
-async def callback_down(call: types.CallbackQuery, state: FSMContext):
-	try:
-		async with state.proxy() as data:
-			data['date_count'] += 1
-			date_count = data['date_count']
-			button_state = data["state"]
-			await bot.edit_message_text(
-				chat_id=call.message.chat.id,
-				message_id=call.message.message_id,
-				text=f"*{'Выбираем день недели' if not button_state else 'На какой день задание?'}\n📅 {week_definition(date_count)[0]} - {week_definition(date_count)[1]} 📅*",
-				parse_mode="markdown",
-				reply_markup=Buttons.Inline_Date_ADD if button_state else Buttons.Inline_Date)
-
-	except KeyError:
-		pass
-
-
-@dp.callback_query_handler(text="Inline_Date_Up", state='*')
-async def callback_up(call: types.CallbackQuery, state: FSMContext):
-	try:
-		async with state.proxy() as data:
-			data['date_count'] -= 1
-			date_count = data['date_count']
-			button_state = data["state"]
-		await bot.edit_message_text(
-			chat_id=call.message.chat.id,
-			message_id=call.message.message_id,
-			text=f"*{'Выбираем день недели' if not button_state else 'На какой день задание?'}\n📅 {week_definition(date_count)[0]} - {week_definition(date_count)[1]} 📅*",
-			parse_mode="markdown",
-			reply_markup=Buttons.Inline_Date_ADD if button_state else Buttons.Inline_Date)
-	except KeyError:
-		pass
+def register_cq_handlers(dsp: Dispatcher):
+	dsp.register_callback_query_handler(callback=callback_up, text='Inline_Date_Up', state='*')
+	dsp.register_callback_query_handler(callback=callback_down, text='Inline_Date_Up', state='*')
+	dsp.register_callback_query_handler(callback=all_week_homework, text='Inline_Date_Week', state='*')
+	dsp.register_callback_query_handler(homework_reply, lambda query: query.data.split('_')[2][0] == 'B')
+	dsp.register_callback_query_handler(
+		edit_homework_date,
+		lambda query: query.data.split('_')[2][0] == 'B',
+		state=SelfState.Edit_state)
 
 
 if __name__ == '__main__':
+	register_cq_handlers(dp)
 	executor.start_polling(dp, skip_updates=True)

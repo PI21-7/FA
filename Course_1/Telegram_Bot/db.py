@@ -36,16 +36,18 @@ class Connections(object):
 
 
 class Database(DatabaseInterface):
+
     @Connections.safe
     def add_user(self, connection: tuple, chat_id: str, user_group: str, username: str):
         connection, cursor = connection
-        try:
+        cursor = cursor.execute('''SELECT user_group FROM Users WHERE chat_id = ?''', (chat_id,))
+        if cursor.fetchall():
+            cursor.execute('''UPDATE Users SET user_group = ? WHERE chat_id = ?;''', (user_group, chat_id))
+        else:
             cursor.execute('''INSERT INTO Users (chat_id, user_group, username) VALUES (?, ?, ?)''',
                            (chat_id, user_group.upper(), username))
-        except sqlite3.IntegrityError:
-            cursor.execute('''UPDATE Users SET user_group = ? WHERE chat_id = ?;''', (user_group, chat_id))
-        finally:
-            connection.commit()
+
+        connection.commit()
 
     @Connections.safe
     def get_user_group(self, connection: tuple, chat_id: str) -> str:
@@ -78,10 +80,42 @@ class Database(DatabaseInterface):
         cursor.execute('''create table if not exists Users (
         id          INTEGER primary key,
         chat_id     TEXT not null,
-        user_group  TEXT not null 
+        user_group  TEXT not null,
+        username  TEXT not null
         )''')
+        cursor.execute('''
+        create table if not exists Materials
+        (
+            id         INTEGER primary key,
+            file_id   TEXT,
+            group_name TEXT,
+            file_name TEXT
+        );
+        ''')
 
         connection.commit()
+
+    @Connections.safe
+    def attach_file_materials(self, connection: tuple, file_id: str, group: str, file_name: str):
+        connection, cursor = connection
+
+        cursor.execute('''INSERT INTO Materials (FILE_ID, GROUP_NAME, FILE_NAME) VALUES (?, ?, ?)''', (file_id, group, file_name,))
+        connection.commit()
+
+    @Connections.safe
+    def is_file_attached_materials(self, connection: tuple, group: str, file_name: str):
+        connection, cursor = connection
+        cursor = cursor.execute('''SELECT file_id FROM Materials WHERE group_name = ? and file_name = ?''', (group, file_name,))
+        if cursor.fetchall():
+            return False
+        return True
+
+    @Connections.safe
+    def get_attachments_materials(self, connection: tuple, group: str):
+        connection, cursor = connection
+        cursor = cursor.execute('''SELECT ALL file_id FROM Materials WHERE group_name = ?''', (group,))
+        connection.commit()
+        return cursor.fetchall()
 
     @Connections.safe
     def attach_file(self, connection: tuple, date: str, filename: str, group: str):

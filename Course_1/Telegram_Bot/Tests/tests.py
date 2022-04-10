@@ -4,7 +4,7 @@ from Course_1.Telegram_Bot.db import *
 
 
 class DatabaseTests(unittest.TestCase):
-    Test_DB = Database.UsersDB()
+    Test_DB = Database()
 
     def test_init(self):
         """
