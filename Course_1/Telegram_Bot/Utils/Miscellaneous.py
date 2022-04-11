@@ -19,6 +19,7 @@ class SelfState(StatesGroup):
 	Delete_state = State()
 	Parse_state = State()
 	Materials_state = State()
+	Materials_parse_state = State()
 
 
 storage = MemoryStorage()
