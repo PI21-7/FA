@@ -1,5 +1,4 @@
 ############################################
-import datetime							   #
 import transliterate as tr				   #
 import aiogram.utils.exceptions			   #
 ############################################
@@ -8,12 +7,10 @@ from Buttons.Maintenance import *		   #
 from Buttons import Buttons				   #
 ############################################
 from datetime import timedelta			   #
-from datetime import datetime			   #
 from aiogram import types				   #
 from aiogram.utils import executor		   #
 from Utils.date import week_definition	   #
 from aiogram.dispatcher import FSMContext  #
-from Utils.debug import Debugger		   #
 ############################################
 
 debugger = Debugger()
@@ -100,7 +97,7 @@ async def add_homework_subject(query: types.CallbackQuery, state: FSMContext):
 			reply_markup=Buttons.Inline_Date_ADD,
 			parse_mode='markdown')
 	except KeyError as e:
-		print(e)
+		debugger.error(e)
 
 
 @dp.message_handler(lambda message: message.text == 'Получить задание!',  state="*")
@@ -139,7 +136,7 @@ async def add_homework_subject(query: types.CallbackQuery, state: FSMContext):
 			text=f'*Введите новое задание*',
 			parse_mode='markdown')
 	except KeyError as e:
-		print(e)
+		debugger.error(e)
 
 
 @dp.callback_query_handler(text='Inline_Delete')
@@ -240,19 +237,6 @@ async def process_add_command(message: types.Message, state: FSMContext):
 			parse_mode='markdown')
 
 
-@dp.callback_query_handler(text='Inline_Add')
-async def add_homework_state(call: types.CallbackQuery):
-	start_date = datetime.now()
-	await SelfState.Add_state.set()
-	await bot.edit_message_text(
-		chat_id=call.message.chat.id,
-		message_id=call.message.message_id,
-		text=f"*Выберите предмет*",
-		parse_mode="markdown",
-		reply_markup=Buttons.create_subjects_keyboard(get_group_schedule(get_user_group(call.message), start=start_date))
-	)
-
-
 @dp.message_handler(state=SelfState.Parse_state, content_types=types.ContentType.DOCUMENT)
 async def parse_attachments(message: types.Message, state: FSMContext):
 	async with state.proxy() as data:
@@ -264,7 +248,7 @@ async def parse_attachments(message: types.Message, state: FSMContext):
 	state=SelfState.Add_state,
 	content_types=[types.ContentType.TEXT, types.ContentType.DOCUMENT, types.ContentType.PHOTO]
 )
-async def add_homework(message: types.Message, state: FSMContext):
+async def add_homework(message: types.Message, state: FSMContext):  # Проблематично перенести
 	try:
 		async with state.proxy() as data:
 			date = data['date']
@@ -276,7 +260,7 @@ async def add_homework(message: types.Message, state: FSMContext):
 		return Ellipsis
 
 	if HDB.is_exists(subject_name=subject, date=date, group=get_user_group(message)):
-		await message.reply(text='*Мы уже записывали задание на этот день и на это предмет :)*', parse_mode='markdown')
+		await message.reply(text='*Мы уже записывали задание на этот день и на этот предмет :)*', parse_mode='markdown')
 		await state.finish()
 		return Ellipsis
 
@@ -306,42 +290,7 @@ async def add_homework(message: types.Message, state: FSMContext):
 	try:
 		await bot.delete_message(message.chat.id, message_id=message.message_id - 1)
 	except aiogram.utils.exceptions.MessageToDeleteNotFound:
-		print('Какое-то сообщение не удаляется(')
-
-
-@dp.callback_query_handler(text='Inline_Edit')
-async def edit_init(call: types.CallbackQuery, state: FSMContext):
-	async with state.proxy() as data:
-		data['state'] = True
-		date_count = data['date_count']
-	start_date, end_date = week_definition(date_count)
-	await bot.edit_message_text(
-		chat_id=call.message.chat.id,
-		message_id=call.message.message_id,
-		text=f"*На какой день задание?\n📅 {start_date} - {end_date} 📅*",
-		reply_markup=Buttons.Inline_Date_ADD,
-		parse_mode="markdown"
-	)
-	await SelfState.Edit_state.set()
-
-
-@dp.message_handler(state=SelfState.Edit_state)
-async def edit_homework(message: types.Message, state: FSMContext):
-	text = message.text
-	async with state.proxy() as data:
-		date = data['date']
-		subject = data['subject']
-	debugger.info(message.from_user.username, 'отредактировал', text)
-	HDB.delete_homework(subject_name=subject, date=date, group=get_user_group(message))
-	text = HDB.add_homework(
-		subject_name=subject,
-		username=message.from_user.username,
-		text=text, date=date,
-		group=get_user_group(message),
-		edit=True)
-	await message.answer(
-		text=f'*{text}*', parse_mode='markdown')
-	await state.finish()
+		debugger.error('Какое-то сообщение не удаляется(')
 
 
 def register_cq_handlers(dsp: Dispatcher):
@@ -360,6 +309,9 @@ def register_cq_handlers(dsp: Dispatcher):
 		lambda query: query.data.split('_')[2][0] == 'B' if len(query.data.split('_')) > 2 else False,
 		state=SelfState.Add_state
 	)
+	dsp.register_callback_query_handler(edit_homework, state=SelfState.Edit_state)
+	dsp.register_callback_query_handler(edit_init, text='Inline_edit')
+	dsp.register_callback_query_handler(add_homework_state, text='Inline_Add')
 
 
 if __name__ == '__main__':

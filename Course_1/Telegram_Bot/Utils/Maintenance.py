@@ -2,9 +2,9 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters.state import StatesGroup, State
 
-from Utils.Schedule import *
-from config import TOKEN
-from db import Database
+from Course_1.Telegram_Bot.Utils.Schedule import *
+from Course_1.Telegram_Bot.config import TOKEN
+from Course_1.Telegram_Bot.db import Database
 
 
 class SelfState(StatesGroup):
@@ -31,12 +31,12 @@ days_of_week = {
 }
 
 days = {
-	'Bm' : 0,
-	'Bt' : 1,
-	'Bwd' : 2,
-	'Bth' : 3,
-	'Bf' : 4,
-	'BSn' : 5
+	'Bm': 0,
+	'Bt': 1,
+	'Bwd': 2,
+	'Bth': 3,
+	'Bf': 4,
+	'BSn': 5
 }
 
 

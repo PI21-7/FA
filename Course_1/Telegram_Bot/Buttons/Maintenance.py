@@ -1,14 +1,19 @@
 import asyncio
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.utils.exceptions import MessageToDeleteNotFound
 
 from Course_1.Telegram_Bot.Buttons.Buttons import *
-from Course_1.Telegram_Bot.Utils.Maintenance import bot, HDB, get_user_group, days_of_week, days, SelfState
+from Course_1.Telegram_Bot.Utils.Maintenance import bot, HDB, get_user_group, days_of_week, days, SelfState, \
+	get_group_schedule
 from Course_1.Telegram_Bot.Utils.date import week_definition
+from Course_1.Telegram_Bot.Utils.debug import Debugger
 from Course_1.Telegram_Bot.bot import process_start_command
+
+
+debugger = Debugger()
 
 
 async def callback_down(call: types.CallbackQuery, state: FSMContext):
@@ -70,7 +75,6 @@ async def all_week_homework(call: types.CallbackQuery, state: FSMContext):
 				parse_mode='markdown')
 			if HDB.is_file_attached(group=get_user_group(call.message), date=current_day):
 				attachments = HDB.get_attachments(group=get_user_group(call.message), date=current_day)
-				print(attachments)
 				for pos, document in enumerate(attachments):
 					await bot.send_document(
 						chat_id=call.message.chat.id,
@@ -80,7 +84,7 @@ async def all_week_homework(call: types.CallbackQuery, state: FSMContext):
 		try:
 			await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
 		except MessageToDeleteNotFound:
-			print('Какое-то сообщение не удаляется(')
+			debugger.error('Какое-то сообщение не удаляется(')
 	except KeyError:
 		await process_start_command(call.message)
 
@@ -128,7 +132,7 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 			try:
 				await bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
 			except MessageToDeleteNotFound:
-				print('Какое-то сообщение не удаляется(')
+				debugger.error('Какое-то сообщение не удаляется(')
 		else:
 			await query.message.answer(
 				text='*Никто не заполнил домашнее задания на этот день* 😭', parse_mode='markdown'
@@ -185,3 +189,48 @@ async def add_homework_date(query: types.CallbackQuery, state: FSMContext):
 		async with state.proxy() as data:
 			data['date'] = (start_date + timedelta(days=days[day])).strftime('%d.%m.%Y')
 		await SelfState.Add_state.set()
+
+
+async def edit_homework(message: types.Message, state: FSMContext):
+	text = message.text
+	async with state.proxy() as data:
+		date = data['date']
+		subject = data['subject']
+	debugger.info(message.from_user.username, 'отредактировал', text)
+	HDB.delete_homework(subject_name=subject, date=date, group=get_user_group(message))
+	text = HDB.add_homework(
+		subject_name=subject,
+		username=message.from_user.username,
+		text=text, date=date,
+		group=get_user_group(message),
+		edit=True)
+	await message.answer(
+		text=f'*{text}*', parse_mode='markdown')
+	await state.finish()
+
+
+async def edit_init(call: types.CallbackQuery, state: FSMContext):
+	async with state.proxy() as data:
+		data['state'] = True
+		date_count = data['date_count']
+	start_date, end_date = week_definition(date_count)
+	await bot.edit_message_text(
+		chat_id=call.message.chat.id,
+		message_id=call.message.message_id,
+		text=f"*На какой день задание?\n📅 {start_date} - {end_date} 📅*",
+		reply_markup=Inline_Date_ADD,
+		parse_mode="markdown"
+	)
+	await SelfState.Edit_state.set()
+
+
+async def add_homework_state(call: types.CallbackQuery):
+	start_date = datetime.now()
+	await SelfState.Add_state.set()
+	await bot.edit_message_text(
+		chat_id=call.message.chat.id,
+		message_id=call.message.message_id,
+		text=f"*Выберите предмет*",
+		parse_mode="markdown",
+		reply_markup=create_subjects_keyboard(get_group_schedule(get_user_group(call.message), start=start_date))
+	)

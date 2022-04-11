@@ -2,12 +2,18 @@ from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeybo
 from transliterate import translit
 
 
+def __compose_str(string):
+    if len(string) <= 10:
+        return string
+    return string[len(string) // 2:]
+
+
 def create_subjects_keyboard(schedule: list or set):
     buttons_list = []
     for item in schedule:
         item: str
         buttons_list.append([InlineKeyboardButton(text=item, callback_data=translit(
-            item[len(item) // 2:], language_code='ru', reversed=True))])
+            __compose_str(item), language_code='ru', reversed=True))])
     keyboard_inline_buttons = InlineKeyboardMarkup(inline_keyboard=buttons_list)
     return keyboard_inline_buttons
 

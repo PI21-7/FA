@@ -18,3 +18,9 @@ class Debugger:
             print(out)
         else:
             return out
+
+    def error(self, data) -> str or None:
+        if self.action:
+            print(data)
+        else:
+            return data
