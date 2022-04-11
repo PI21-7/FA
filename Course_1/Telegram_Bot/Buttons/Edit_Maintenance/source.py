@@ -1,4 +1,4 @@
-from Course_1.Telegram_Bot.Buttons.__modules__ import *
+from Buttons.__modules__ import *
 
 
 async def editor_homework_date(query: types.CallbackQuery, state: FSMContext):
@@ -37,7 +37,7 @@ async def edit_homework(message: types.Message, state: FSMContext):
 	async with state.proxy() as data:
 		date = data['date']
 		subject = data['subject']
-	debugger.info(message.from_user.username, 'отредактировал', text)
+	Debugger.info(message.from_user.username, 'отредактировал', text)
 	HDB.delete_homework(subject_name=subject, date=date, group=get_user_group(message))
 	text = HDB.add_homework(
 		subject_name=subject,
@@ -88,4 +88,4 @@ async def editor_add_homework_subject(query: types.CallbackQuery, state: FSMCont
 			text=f'*Введите новое задание*',
 			parse_mode='markdown')
 	except KeyError as e:
-		debugger.error(e)
+		Debugger.error(e)

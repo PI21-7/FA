@@ -1,6 +1,6 @@
 import unittest
 import os
-from Course_1.Telegram_Bot.db import *
+from Course_1.Telegram_Bot.Database import *
 
 
 class DatabaseTests(unittest.TestCase):

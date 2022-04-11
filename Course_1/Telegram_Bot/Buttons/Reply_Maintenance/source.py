@@ -1,4 +1,6 @@
-from Course_1.Telegram_Bot.Buttons.__modules__ import *
+# noinspection INSPECTION_NAME
+
+from Buttons.__modules__ import *
 
 
 async def all_week_homework(call: types.CallbackQuery, state: FSMContext):
@@ -36,7 +38,7 @@ async def all_week_homework(call: types.CallbackQuery, state: FSMContext):
 		try:
 			await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
 		except MessageToDeleteNotFound:
-			debugger.error('Какое-то сообщение не удаляется(')
+			Debugger.error('Какое-то сообщение не удаляется(')
 	except KeyError:
 		await process_start_command(call.message)
 
@@ -84,7 +86,7 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 			try:
 				await bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
 			except MessageToDeleteNotFound:
-				debugger.error('Какое-то сообщение не удаляется(')
+				Debugger.error('Какое-то сообщение не удаляется(')
 		else:
 			await query.message.answer(
 				text='*Никто не заполнил домашнее задания на этот день* 😭', parse_mode='markdown'
@@ -95,7 +97,7 @@ async def homework_reply(query: types.CallbackQuery, state: FSMContext):
 
 
 async def processing_of_receiving_hw(message: types.Message, state: FSMContext):
-	debugger.info(message.from_user.username, 'получает задание')
+	Debugger.info(message.from_user.username, 'получает задание')
 	await state.finish()
 	async with state.proxy() as data:
 		data['date_count'] = 0

@@ -1,26 +1,21 @@
 class Debugger:
-    def __init__(self, action: bool = True):
-        """
-        :type action: bool
-        :type_description action: If true, print info, else return info in string form
-        """
-        assert isinstance(action, bool)
-        self.action = action
+    debug = True
 
-    def info(self, user, action, data=None) -> str or None:
+    @classmethod
+    def info(cls, user, action, data=None) -> str or None:
         """Вывод в консоль информации о действиях пользователя"""
+        if not cls.debug:
+            return ...
         if data is None:
             data = ''
         else:
             data = f'\n--> {data}'
         out = f'{user} {action}{data}'
-        if self.action:
-            print(out)
-        else:
-            return out
+        print(out)
 
-    def error(self, data) -> str or None:
-        if self.action:
-            print(data)
-        else:
-            return data
+    @classmethod
+    def error(cls, data) -> str or None:
+        if not cls.debug:
+            return ...
+        print(data)
+

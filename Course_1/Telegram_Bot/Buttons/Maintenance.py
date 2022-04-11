@@ -1,7 +1,7 @@
-from Course_1.Telegram_Bot.Buttons.Add_Maintenance.source import *
-from Course_1.Telegram_Bot.Buttons.Delete_Maintenance.source import *
-from Course_1.Telegram_Bot.Buttons.Edit_Maintenance.source import *
-from Course_1.Telegram_Bot.Buttons.Reply_Maintenance.source import *
+from Buttons.Add_Maintenance.source import *
+from Buttons.Delete_Maintenance.source import *
+from Buttons.Edit_Maintenance.source import *
+from Buttons.Reply_Maintenance.source import *
 
 
 async def callback_down(call: types.CallbackQuery, state: FSMContext):
@@ -41,7 +41,7 @@ async def process_rule_command(message: types.Message, state: FSMContext):
 	await state.finish()
 	async with state.proxy() as data:
 		data['date_count'] = 0
-	debugger.info(message.from_user.username, 'управляет заданиями')
+	Debugger.info(message.from_user.username, 'управляет заданиями')
 	if message.from_user.username in green_list():
 		await message.answer(
 			text='*Что будем делать?*',

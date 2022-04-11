@@ -1,4 +1,4 @@
-from Course_1.Telegram_Bot.Buttons.__modules__ import *
+from Buttons.__modules__ import *
 
 
 async def delete_homework_date(query: types.CallbackQuery, state: FSMContext):
@@ -43,7 +43,7 @@ async def delete_homework(query: types.CallbackQuery, state: FSMContext):
 			subject = schedule[pos]
 			break
 	group = get_user_group(message)
-	debugger.info(message.from_user.username, 'удалил', ' '.join([subject, date, group]))
+	Debugger.info(message.from_user.username, 'удалил', ' '.join([subject, date, group]))
 	HDB.delete_homework(subject_name=subject, date=date, group=group)
 	await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
 	await message.answer(

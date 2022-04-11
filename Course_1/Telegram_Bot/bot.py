@@ -1,11 +1,14 @@
 ############################################
-from Utils.Miscellaneous import *		   #
-from registration import *				   #
+from Utils.debug import Debugger
+from Utils.Miscellaneous import *
+from registration import *
 ############################################
-from aiogram import types				   #
-from aiogram.utils import executor		   #
-from aiogram.dispatcher import FSMContext  #
+from aiogram import types
+from aiogram.utils import executor
+from aiogram.dispatcher import FSMContext
 ############################################
+
+sys.path.append("..")
 
 
 @dp.message_handler(commands=['start'], state="*")
@@ -48,6 +51,15 @@ async def materials_state(call: types.CallbackQuery, _state: FSMContext):
 	await SelfState.Materials_state.set()
 
 
+def __sys_arguments(*args, **_kwargs):
+	for argument in args:
+		if argument == '-i' or argument == '--init':
+			HDB.init()
+		if argument == '-s' or argument == '--silent':
+			Debugger.debug = False
+
+
 if __name__ == '__main__':
+	__sys_arguments(*sys.argv)
 	overall_handlers_registration(dp)
 	executor.start_polling(dp, skip_updates=True)
