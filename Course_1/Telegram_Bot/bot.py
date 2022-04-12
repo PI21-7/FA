@@ -1,6 +1,7 @@
 ############################################
 from Utils.Miscellaneous import *
 from registration import *
+from Utils.Phrases import *
 ############################################
 from Utils.debug import Debugger
 from aiogram import types
@@ -11,7 +12,7 @@ from aiogram.dispatcher import FSMContext
 
 @dp.message_handler(commands=['start'], state="*")
 async def process_start_command(message: types.Message):
-	await message.answer("Привет! Для получения задания, скажи из какой ты группы!\n\nНапример: ПИ21-7")
+	await message.answer(Welcome)
 	await SelfState.Group_state.set()
 
 
@@ -29,22 +30,22 @@ async def process_add_material_command(message: types.Message, state: FSMContext
 			file_id=message.document.file_id,
 			group=get_user_group(message),
 			file_name=message.document.file_name)
-		await message.answer("материалы добавлены")
+		await message.answer(Mat_added, parse_mode='markdown')
 	else:
-		await message.answer("этот файл уже добавлен!")
+		await message.answer(Mat_already, parse_mode='markdown')
 
 
 @dp.message_handler(state=SelfState.Materials_state)
 async def process_answer_by_document(message: types.Message, state: FSMContext):
 	await state.finish()
-	await message.answer("Надо было отправить просто файл😭")
+	await message.answer(Mat_wrong, parse_mode='markdown')
 
 
 @dp.callback_query_handler(text='Inline_Materials')
 async def materials_state(call: types.CallbackQuery, state: FSMContext):
 	await bot.send_message(
 			chat_id=call.message.chat.id,
-			text="Прикрепите материалы",
+			text=Mat_attach,
 			parse_mode="markdown"
 		)
 	await SelfState.Materials_state.set()

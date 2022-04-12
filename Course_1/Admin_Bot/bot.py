@@ -1,3 +1,5 @@
+import sys
+
 from aiogram import Bot, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import Dispatcher
@@ -8,7 +10,13 @@ from admin_buttons import Start_buttons
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
-from Course_1.Telegram_Bot.Utils.Maintenance import green_list
+sys.path.append('..')
+
+
+def green_list(path: str = 'Admin/admins.txt'):
+	with open(path, 'r+', encoding='utf-8') as data:
+		return list(filter(lambda x: '\n' not in x, data.readline().split(',')))
+
 
 storage = MemoryStorage()
 bot = Bot(token=TOKEN)
