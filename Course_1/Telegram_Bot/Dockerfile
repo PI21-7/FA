@@ -5,6 +5,6 @@ WORKDIR /src/app/
 
 COPY . /src/app/
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --user --no-cache-dir -r requirements.txt
 
-CMD ["python", "bot.py"]
+CMD ["python", "bot.py", "-i", "-s"]

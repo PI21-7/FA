@@ -2,17 +2,23 @@ from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeybo
 from transliterate import translit
 
 
+def __compose_str(string):
+    if len(string) <= 10:
+        return string
+    return string[len(string) // 2:]
+
+
 def create_subjects_keyboard(schedule: list or set):
     buttons_list = []
     for item in schedule:
         item: str
         buttons_list.append([InlineKeyboardButton(text=item, callback_data=translit(
-            item[len(item) // 2:], language_code='ru', reversed=True))])
+            __compose_str(item), language_code='ru', reversed=True))])
     keyboard_inline_buttons = InlineKeyboardMarkup(inline_keyboard=buttons_list)
     return keyboard_inline_buttons
 
 
-answer_start = ReplyKeyboardMarkup(resize_keyboard=True).add("Получить задание!").add('Управление заданиями')
+answer_start = ReplyKeyboardMarkup(resize_keyboard=True).add("Получить задание!").add('Управление заданиями').add('Полезные материалы')
 Inline_Date = InlineKeyboardMarkup(inline_keyboard=True, row_width=3)
 Inline_Date_Week = InlineKeyboardButton(text='Вся неделя 🥶', callback_data='Inline_Date_Week')
 Inline_Date_Bm = InlineKeyboardButton(text='Понедельник 💀', callback_data='Inline_Date_Bm')
@@ -28,12 +34,15 @@ Inline_Manage = InlineKeyboardMarkup(inline_keyboard=True)
 Inline_Edit = InlineKeyboardButton(text='Редактировать ДЗ', callback_data='Inline_Edit')
 Inline_Add = InlineKeyboardButton(text='Добавить ДЗ', callback_data='Inline_Add')
 Inline_Delete = InlineKeyboardButton(text='Удалить ДЗ', callback_data='Inline_Delete')
-Inline_Manage.add(Inline_Add).add(Inline_Edit).add(Inline_Delete)
+Inline_Materials = InlineKeyboardButton(text='Добавить материалы', callback_data='Inline_Materials')
+Inline_Manage.add(Inline_Add).add(Inline_Edit).add(Inline_Delete).add(Inline_Materials)
 
 Inline_Date_ADD = InlineKeyboardMarkup()
+
 Inline_Date_ADD.add(Inline_Date_Up).add(Inline_Date_Bm).add(Inline_Date_Bt).add(Inline_Date_Bwd)\
     .add(Inline_Date_Bth).add(Inline_Date_Bf)\
     .add(Inline_Date_Sn).add(Inline_Date_Down)
+
 Inline_Date.add(Inline_Date_Up).add(Inline_Date_Week).add(Inline_Date_Bm).add(Inline_Date_Bt).add(Inline_Date_Bwd)\
     .add(Inline_Date_Bth).add(Inline_Date_Bf)\
     .add(Inline_Date_Sn).add(Inline_Date_Down)
