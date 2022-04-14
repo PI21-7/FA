@@ -5,5 +5,4 @@
 ## Contributors
 * **Nikolai Pikalov aka _[Nps-rf](https://github.com/Nps-rf)_**
 * **Andrey Zharov aka _[Ginkey](https://github.com/GinKey)_**
-* **Alexander Pyatunin aka _[illler](https://github.com/illler)_**
 
