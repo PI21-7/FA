@@ -37,6 +37,7 @@ def register_cq_handlers(dp: Dispatcher):
 		adding_add_homework_subject,
 		lambda query: 'Inline' not in query.data,
 		state=SelfState.Add_state)
+	dp.register_callback_query_handler(answer_about_questions, text='Inline_Question_Why')
 
 
 def register_msg_handlers(dp: Dispatcher):
@@ -66,6 +67,8 @@ def register_msg_handlers(dp: Dispatcher):
 		process_get_materials,
 		lambda message: message.text == 'Полезные материалы',
 		state="*")
+	dp.register_message_handler(process_start_command, commands=['start'], state="*")
+	dp.register_message_handler(process_about_command, commands=['about'], state="*")
 
 
 def overall_handlers_registration(dp: Dispatcher):

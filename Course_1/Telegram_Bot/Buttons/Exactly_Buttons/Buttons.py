@@ -35,6 +35,7 @@ Inline_Edit = InlineKeyboardButton(text='Редактировать ДЗ', callb
 Inline_Add = InlineKeyboardButton(text='Добавить ДЗ', callback_data='Inline_Add')
 Inline_Delete = InlineKeyboardButton(text='Удалить ДЗ', callback_data='Inline_Delete')
 Inline_Materials = InlineKeyboardButton(text='Добавить материалы', callback_data='Inline_Materials')
+Inline_Manage_Materials = InlineKeyboardButton(text='Управление материалами', callback_data='Inline_Manage_Materials')
 Inline_Manage.add(Inline_Add).add(Inline_Edit).add(Inline_Delete).add(Inline_Materials)
 
 Inline_Date_ADD = InlineKeyboardMarkup()
@@ -46,3 +47,10 @@ Inline_Date_ADD.add(Inline_Date_Up).add(Inline_Date_Bm).add(Inline_Date_Bt).add(
 Inline_Date.add(Inline_Date_Up).add(Inline_Date_Week).add(Inline_Date_Bm).add(Inline_Date_Bt).add(Inline_Date_Bwd)\
     .add(Inline_Date_Bth).add(Inline_Date_Bf)\
     .add(Inline_Date_Sn).add(Inline_Date_Down)
+
+Inline_Question_Why = InlineKeyboardButton(
+    text='А почему это может быть мне полезным?',
+    callback_data='Inline_Question_Why')
+Inline_About_Questions = InlineKeyboardMarkup()
+Inline_About_Questions.add(Inline_Question_Why)
+
