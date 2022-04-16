@@ -1,6 +1,6 @@
+import string
 from datetime import datetime, timedelta
 from typing import List
-
 import requests
 import urllib3
 
@@ -41,6 +41,5 @@ class Schedule(object):
         request = requests.get(cls.GROUP_SCHEDULE.format(group, start, end), verify=False)
         if request.status_code == 200:
             return request.json()
-        return 'NO RESPONCE'
 
 

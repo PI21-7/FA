@@ -1,5 +1,5 @@
 # noinspection INSPECTION_NAME
-
+import aiogram.utils.exceptions
 from Buttons.__modules__ import *
 
 
@@ -109,10 +109,13 @@ async def processing_of_receiving_hw(message: types.Message, state: FSMContext):
 
 async def process_get_materials(message: types.Message, state: FSMContext):
 	await state.finish()
-	attachments = HDB.get_attachments_materials(group=get_user_group(message))
-	for pos, document in enumerate(attachments):
-		await bot.send_document(
-			chat_id=message.chat.id,
-			document=document[0],
-			caption=None,
-			parse_mode='markdown')
+	try:
+		attachments = HDB.get_attachments_materials(group=get_user_group(message))
+		for pos, document in enumerate(attachments):
+			await bot.send_document(
+				chat_id=message.chat.id,
+				document=document[0],
+				caption=None,
+				parse_mode='markdown')
+	except aiogram.utils.exceptions.WrongFileIdentifier:
+		await message.answer(text='*У нас не нашлось полезных материалов вашей группы.\nМожет их ещё не добавили?*', parse_mode='markdown')

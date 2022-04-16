@@ -13,7 +13,9 @@ sys.path.append("..")
 
 
 class SelfState(StatesGroup):
+	Faculty_state = State()
 	Group_state = State()
+	Groups_state = State()
 	Add_state = State()
 	Edit_state = State()
 	Delete_state = State()
