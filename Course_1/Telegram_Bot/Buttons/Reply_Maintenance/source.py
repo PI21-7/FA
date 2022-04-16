@@ -111,6 +111,10 @@ async def process_get_materials(message: types.Message, state: FSMContext):
 	await state.finish()
 	try:
 		attachments = HDB.get_attachments_materials(group=get_user_group(message))
+		if not attachments:
+			await message.answer(
+				text='*У нас не нашлось полезных материалов вашей группы.\nМожет их ещё не добавили?*',
+				parse_mode='markdown')
 		for pos, document in enumerate(attachments):
 			await bot.send_document(
 				chat_id=message.chat.id,
@@ -118,4 +122,6 @@ async def process_get_materials(message: types.Message, state: FSMContext):
 				caption=None,
 				parse_mode='markdown')
 	except aiogram.utils.exceptions.WrongFileIdentifier:
-		await message.answer(text='*У нас не нашлось полезных материалов вашей группы.\nМожет их ещё не добавили?*', parse_mode='markdown')
+		await message.answer(
+			text='*У нас не нашлось полезных материалов вашей группы.\nМожет их ещё не добавили?*',
+			parse_mode='markdown')

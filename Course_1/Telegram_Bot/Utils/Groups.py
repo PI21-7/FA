@@ -101,7 +101,7 @@ class Groups:
         result = list()
         for item in cls.__read_log():
             for i in item[1]:
-                if i[:cls.__first_digit(i)] == initial:
+                if i[:cls.__first_digit(i)] == initial and '17' not in i and '18' not in i:
                     result.append(i)
         return sorted(result)
 
