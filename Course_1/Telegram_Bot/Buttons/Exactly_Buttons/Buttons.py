@@ -1,16 +1,27 @@
+from typing import Iterable
+
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from transliterate import translit
 
 
 def __compose_str(string):
-    if len(string) <= 10:
+    if len(string) < 22:
         return string
     return string[len(string) // 2:]
 
 
-def create_subjects_keyboard(schedule: list or set):
+def create_subjects_keyboard(array: Iterable):
     buttons_list = []
-    for item in schedule:
+    for item in array:
+        buttons_list.append([InlineKeyboardButton(text=item, callback_data=translit(
+            __compose_str(item), language_code='ru', reversed=True))])
+    keyboard_inline_buttons = InlineKeyboardMarkup(inline_keyboard=buttons_list)
+    return keyboard_inline_buttons
+
+
+def create_faculties_keyboard(array: Iterable):
+    buttons_list = []
+    for item in array:
         item: str
         buttons_list.append([InlineKeyboardButton(text=item, callback_data=translit(
             __compose_str(item), language_code='ru', reversed=True))])
@@ -53,4 +64,6 @@ Inline_Question_Why = InlineKeyboardButton(
     callback_data='Inline_Question_Why')
 Inline_About_Questions = InlineKeyboardMarkup()
 Inline_About_Questions.add(Inline_Question_Why)
+
+
 

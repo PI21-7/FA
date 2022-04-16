@@ -37,6 +37,18 @@ def register_cq_handlers(dp: Dispatcher):
 		adding_add_homework_subject,
 		lambda query: 'Inline' not in query.data,
 		state=SelfState.Add_state)
+	dp.register_callback_query_handler(
+		faculty_state_command,
+		state=SelfState.Faculty_state
+	)
+	dp.register_callback_query_handler(
+		group_state_command,
+		state=SelfState.Group_state
+	)
+	dp.register_callback_query_handler(
+		groups_state_command,
+		state=SelfState.Groups_state
+	)
 	dp.register_callback_query_handler(answer_about_questions, text='Inline_Question_Why')
 
 
@@ -58,10 +70,6 @@ def register_msg_handlers(dp: Dispatcher):
 		process_rule_command,
 		lambda message: message.text == 'Управление заданиями',
 		state="*")
-	dp.register_message_handler(
-		group_state_command,
-		state=SelfState.Group_state
-	)
 
 	dp.register_message_handler(
 		process_get_materials,

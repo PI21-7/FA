@@ -56,10 +56,3 @@ async def process_rule_command(message: types.Message, state: FSMContext):
 			parse_mode='markdown')
 
 
-async def group_state_command(message: types.Message, state: FSMContext):
-	await state.finish()
-	await message.answer("Нажми на кнопку, чтобы получить домашнее задание.", reply_markup=answer_start)
-	chat_id = message.chat.id
-	user_group = message.text.upper()
-	HDB.add_user(chat_id=chat_id, user_group=user_group, username=message.from_user.username)
-

@@ -5,9 +5,48 @@ from Buttons.__modules__ import *
 
 async def process_start_command(message: types.Message):
     await message.answer(
-        text="Привет! Для получения задания, скажи из какой ты группы!\n\nНапример: *ПИ21-7*",
+        text="*Привет!\nДавай сначала найдем твой факультет?*",
+        parse_mode='markdown', reply_markup=create_faculties_keyboard(Groups.get_faculties_list()))
+    await SelfState.Faculty_state.set()
+
+
+async def faculty_state_command(query: types.CallbackQuery, state: FSMContext):
+    await state.finish()
+    message = query.message
+    faculties = Groups.get_faculties_list()
+    faculty = translit(query.data, language_code='ru')
+    for item in faculties:
+        if faculty.lower() in item.lower():
+            faculty = item
+            break
+        if faculty.lower().strip() == 'економических отношений':
+            faculty = 'Факультет международных экономических отношений'
+            break
+    await message.answer(
+        '*Давай теперь выберем направление?*',
+        reply_markup=create_faculties_keyboard(Groups.get_groups_types(Groups.get_groups_by_faculty(faculty))),
+        parse_mode='markdown')
+    await SelfState.Groups_state.set()
+
+
+async def groups_state_command(query: types.CallbackQuery, state: FSMContext):
+    await state.finish()
+    message = query.message
+    initial = translit(query.data, language_code='ru').upper()
+    await message.answer(
+        '*А теперь группу!*',
+        reply_markup=create_faculties_keyboard(Groups.get_groups_by_initial(initial)),
         parse_mode='markdown')
     await SelfState.Group_state.set()
+
+
+async def group_state_command(query: types.CallbackQuery, state: FSMContext):
+    await state.finish()
+    message = query.message
+    await message.answer("Отлично!\nНажми на кнопку, чтобы получить домашнее задание!", reply_markup=answer_start)
+    chat_id = message.chat.id
+    user_group = translit(query.data, language_code='ru').upper()
+    HDB.add_user(chat_id=chat_id, user_group=user_group, username=message.from_user.username)
 
 
 async def process_about_command(message: types.Message):  # If IDE marks it's as error (below), you can **** it away.
@@ -24,7 +63,7 @@ async def answer_about_questions(query: types.CallbackQuery):
                                'Четверг: прошла пара по вышмату, задали дз до следующего четверга...\n',
                                parse_mode='markdown')
     await asyncio.sleep(2.5)
-    await query.message.answer('*Наступает Суббота*\n', parse_mode='markdown')
+    await query.message.answer('*Наступает суббота*\n', parse_mode='markdown')
     await asyncio.sleep(2)
     await query.message.answer('🙎‍♂` А что матану задали?`\n', parse_mode='markdown')
     await asyncio.sleep(2)
@@ -52,3 +91,4 @@ async def answer_about_questions(query: types.CallbackQuery):
     await asyncio.sleep(3)
     await query.message.answer('*Я надеюсь вы поняли, чем же мы мотивировались при создании этого бота* 🤡',
                                parse_mode='markdown')
+    await state.finish()
