@@ -64,7 +64,7 @@ async def answer_about_questions(query: types.CallbackQuery):
                                parse_mode='markdown')
     await asyncio.sleep(2.5)
     await query.message.answer('*Наступает суббота*\n', parse_mode='markdown')
-    await asyncio.sleep(2)
+    await asyncio.sleep(2.5)
     await query.message.answer('🙎‍♂` А что матану задали?`\n', parse_mode='markdown')
     await asyncio.sleep(2)
     await query.message.answer('🙍‍♀` Пункт 10.1. Понятие о дифференциальном уравнении. '
