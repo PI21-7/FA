@@ -1,9 +1,9 @@
 ---
-name: Feature request | Запрос на обновление
-about: Suggest an idea for this project | Предложение идеи для реализации
-title: ''
-labels: question
-assignees: Nps-rf
+Name: Feature request | Запрос на обновление
+About: Suggest an idea for this project | Предложение идеи для реализации
+Title: 'Any'
+Labels: question
+Assignees: Nps-rf
 
 ---
 
