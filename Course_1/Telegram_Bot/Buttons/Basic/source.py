@@ -18,7 +18,7 @@ async def faculty_state_command(query: types.CallbackQuery, state: FSMContext):
         if faculty.lower() in item.lower():
             faculty = item
             break
-        if faculty.lower().strip() == 'економических отношений':
+        if faculty.lower().strip() == 'економических отношений':  # Bug
             faculty = 'Факультет международных экономических отношений'
             break
     await bot.edit_message_text(
