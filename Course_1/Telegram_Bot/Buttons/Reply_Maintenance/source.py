@@ -125,3 +125,4 @@ async def process_get_materials(message: types.Message, state: FSMContext):
 		await message.answer(
 			text='*У нас не нашлось полезных материалов вашей группы.\nМожет их ещё не добавили?*',
 			parse_mode='markdown')
+		

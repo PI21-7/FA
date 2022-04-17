@@ -12,7 +12,6 @@ async def process_start_command(message: types.Message):
 
 async def faculty_state_command(query: types.CallbackQuery, state: FSMContext):
     await state.finish()
-    message = query.message
     faculties = Groups.get_faculties_list()
     faculty = translit(query.data, language_code='ru')
     for item in faculties:
@@ -22,8 +21,10 @@ async def faculty_state_command(query: types.CallbackQuery, state: FSMContext):
         if faculty.lower().strip() == 'економических отношений':
             faculty = 'Факультет международных экономических отношений'
             break
-    await message.answer(
-        '*Давай теперь выберем направление?*',
+    await bot.edit_message_text(
+        chat_id=query.message.chat.id,
+        message_id=query.message.message_id,
+        text='*Давай теперь выберем направление?*',
         reply_markup=create_faculties_keyboard(Groups.get_groups_types(Groups.get_groups_by_faculty(faculty))),
         parse_mode='markdown')
     await SelfState.Groups_state.set()
@@ -33,8 +34,10 @@ async def groups_state_command(query: types.CallbackQuery, state: FSMContext):
     await state.finish()
     message = query.message
     initial = translit(query.data, language_code='ru').upper()
-    await message.answer(
-        '*А теперь группу!*',
+    await bot.edit_message_text(
+        chat_id=query.message.chat.id,
+        message_id=query.message.message_id,
+        text='*А теперь группу!*',
         reply_markup=create_faculties_keyboard(Groups.get_groups_by_initial(initial)),
         parse_mode='markdown')
     await SelfState.Group_state.set()
@@ -43,9 +46,12 @@ async def groups_state_command(query: types.CallbackQuery, state: FSMContext):
 async def group_state_command(query: types.CallbackQuery, state: FSMContext):
     await state.finish()
     message = query.message
-    await message.answer("Отлично!\nНажми на кнопку, чтобы получить домашнее задание!", reply_markup=answer_start)
     chat_id = message.chat.id
     user_group = translit(query.data, language_code='ru').upper()
+    await bot.delete_message(message.chat.id, message_id=message.message_id)
+    await message.answer(f"Отлично!\nМы записали что ты из группы *{user_group}*.\n"
+                         f"Нажми на кнопку, чтобы получить домашнее задание!",
+                         reply_markup=answer_start, parse_mode='markdown')
     HDB.add_user(chat_id=chat_id, user_group=user_group, username=message.from_user.username)
 
 
