@@ -20,7 +20,7 @@ class Groups:
         dictionary = dict()
         for first_letter in low:
             result = Groups.__get_groups(first_letter)
-            for res in result :
+            for res in result:
                 if 'факультет' in res['description'].lower():
                     desc = res['description'][:res['description'].find('|') - 1]
                     if desc not in dictionary.keys():
@@ -84,6 +84,32 @@ class Groups:
                 result.append(literal_eval(row))
         return result
 
+    @staticmethod
+    def clean_log(path: str = 'Utils/Groups.txt'):
+        with open(path, 'r+', encoding='utf-8') as file:
+            for row in file.readlines():
+                result = literal_eval(row)
+                for group in result[1]:
+                    print(group)
+                    from Schedule import Schedule
+                    schedule = Schedule.get_group_schedule(group)
+                    if not schedule:
+                        result[1].remove(group)
+                file.write(str(result) + '\n')
+
+    @classmethod
+    def clean_group_types(cls, path: str = 'Utils/Groups.txt'):
+        with open(path, 'r+', encoding='utf-8') as file:
+            for row in file.readlines():
+                result = list(literal_eval(row))
+                initials = cls.get_groups_types(result[1])
+                for initial in initials:
+                    from transliterate import translit
+                    tr_initial = translit(translit(initial, language_code='ru', reversed=True), language_code='ru')
+                    if not cls.get_groups_by_initial(tr_initial):
+                        result[1] = list(filter(lambda x: initial not in x, result[1]))
+                file.write(str(tuple(result)) + '\n')
+
     @classmethod
     def get_groups(cls):  # TODO
         return cls.__read_log()
@@ -101,7 +127,7 @@ class Groups:
         result = list()
         for item in cls.__read_log():
             for i in item[1]:
-                if i[:cls.__first_digit(i)] == initial and '17' not in i and '18' not in i:
+                if i[:cls.__first_digit(i)].lower() == initial.lower() and '17' not in i and '18' not in i:
                     result.append(i)
         return sorted(result)
 
@@ -114,7 +140,3 @@ class Groups:
     @classmethod
     def get_groups_types(cls, array):
         return list(set(map(lambda x: x[:cls.__first_digit(x)], array)))
-
-
-if __name__ == '__main__':
-    print(*Groups.get_faculties_list(), sep='\n\n')
