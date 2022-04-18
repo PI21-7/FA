@@ -2,7 +2,7 @@
 
 
 # FA HOMEWORK BOT
-![status_badge](https://img.shields.io/badge/-Руководство%20устарело-important)
+![status_badge](https://img.shields.io/badge/-Руководство%20частично%20устарело-important)
 ![update_date](https://img.shields.io/badge/Дата%20обновления-18.04.2022-informational)
 
 * [**Используемые технологии**](#используемые-технологии)
