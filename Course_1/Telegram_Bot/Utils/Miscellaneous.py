@@ -22,6 +22,7 @@ class SelfState(StatesGroup):
 	Parse_state = State()
 	Materials_state = State()
 	Materials_parse_state = State()
+	Manual_input_state = State()
 
 
 storage = MemoryStorage()

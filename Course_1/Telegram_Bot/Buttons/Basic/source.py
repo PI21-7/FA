@@ -10,6 +10,26 @@ async def process_start_command(message: types.Message):
     await SelfState.Faculty_state.set()
 
 
+async def manual_input_state(query: types.CallbackQuery, state: FSMContext):
+    await state.finish()
+    message = query.message
+    await bot.delete_message(message.chat.id, message_id=message.message_id)
+    await message.answer(f"Хорошо, введи свою группу!\n\n*Например: ПИ21-7*",
+                         reply_markup=answer_start, parse_mode='markdown')
+    await SelfState.Manual_input_state.set()
+
+
+async def manual_input(message: types.Message, state: FSMContext):
+    await state.finish()
+    chat_id = message.chat.id
+    user_group = message.text
+    await bot.delete_message(message.chat.id, message_id=message.message_id - 1)
+    await message.answer(f"Отлично!\nМы записали что ты из группы *{user_group}*.\n"
+                         f"Нажми на кнопку, чтобы получить домашнее задание!",
+                         reply_markup=answer_start, parse_mode='markdown')
+    HDB.add_user(chat_id=chat_id, user_group=user_group, username=message.from_user.username)
+
+
 async def faculty_state_command(query: types.CallbackQuery, state: FSMContext):
     await state.finish()
     faculties = Groups.get_faculties_list()
@@ -32,7 +52,6 @@ async def faculty_state_command(query: types.CallbackQuery, state: FSMContext):
 
 async def groups_state_command(query: types.CallbackQuery, state: FSMContext):
     await state.finish()
-    message = query.message
     initial = translit(query.data, language_code='ru').upper()
     await bot.edit_message_text(
         chat_id=query.message.chat.id,
