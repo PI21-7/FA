@@ -15,6 +15,7 @@ def create_subjects_keyboard(array: Iterable):
     for item in array:
         buttons_list.append([InlineKeyboardButton(text=item, callback_data=translit(
             __compose_str(item), language_code='ru', reversed=True))])
+
     keyboard_inline_buttons = InlineKeyboardMarkup(inline_keyboard=buttons_list)
     return keyboard_inline_buttons
 
@@ -26,7 +27,8 @@ def create_faculties_keyboard(array: Iterable):
         buttons_list.append([InlineKeyboardButton(text=item, callback_data=translit(
             __compose_str(item), language_code='ru', reversed=True))])
     keyboard_inline_buttons = InlineKeyboardMarkup(inline_keyboard=buttons_list)
-    return keyboard_inline_buttons
+    Manual = InlineKeyboardButton(text='Ручной ввод', callback_data='Inline_Manual_Input')
+    return keyboard_inline_buttons.add(Manual)
 
 
 answer_start = ReplyKeyboardMarkup(resize_keyboard=True).add("Получить задание!").add('Управление заданиями').add('Полезные материалы')

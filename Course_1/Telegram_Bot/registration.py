@@ -18,6 +18,7 @@ def register_cq_handlers(dp: Dispatcher):
 		lambda query: query.data.split('_')[2][0] == 'B' if len(query.data.split('_')) > 2 else False,
 		state=SelfState.Add_state
 	)
+	dp.register_callback_query_handler(manual_input_state, text='Inline_Manual_Input', state='*')
 	dp.register_callback_query_handler(edit_init, text='Inline_Edit')
 	dp.register_callback_query_handler(add_homework_state, text='Inline_Add')
 	dp.register_callback_query_handler(
@@ -49,7 +50,7 @@ def register_cq_handlers(dp: Dispatcher):
 		groups_state_command,
 		state=SelfState.Groups_state
 	)
-	dp.register_callback_query_handler(answer_about_questions, text='Inline_Question_Why')
+	dp.register_callback_query_handler(answer_about_questions, text='Inline_Question_Why', state='*')
 
 
 def register_msg_handlers(dp: Dispatcher):
@@ -77,6 +78,7 @@ def register_msg_handlers(dp: Dispatcher):
 		state="*")
 	dp.register_message_handler(process_start_command, commands=['start'], state="*")
 	dp.register_message_handler(process_about_command, commands=['about'], state="*")
+	dp.register_message_handler(manual_input, state=SelfState.Manual_input_state)
 
 
 def overall_handlers_registration(dp: Dispatcher):
