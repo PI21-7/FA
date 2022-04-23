@@ -4,6 +4,7 @@
 # FA HOMEWORK BOT
 ![status_badge](https://img.shields.io/badge/-Руководство%20частично%20устарело-important)
 ![update_date](https://img.shields.io/badge/Дата%20обновления-18.04.2022-informational)
+![](https://tokei.rs/b1/github/Nps-rf/FA?category=code)
 
 * [**Используемые технологии**](#используемые-технологии)
 * [**Как пользоваться?**](#как-пользоваться)
