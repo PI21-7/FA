@@ -20,6 +20,16 @@ def create_subjects_keyboard(array: Iterable):
     return keyboard_inline_buttons
 
 
+def create_materials_keyboard(array: Iterable):
+    buttons_list = []
+    for item in array:
+        buttons_list.append([InlineKeyboardButton(text='Удалить 💣', callback_data=translit(
+            __compose_str(item), language_code='ru', reversed=True))])
+
+    keyboard_inline_buttons = InlineKeyboardMarkup(inline_keyboard=buttons_list)
+    return keyboard_inline_buttons
+
+
 def create_faculties_keyboard(array: Iterable):
     buttons_list = []
     for item in array:
@@ -48,8 +58,8 @@ Inline_Edit = InlineKeyboardButton(text='Редактировать ДЗ', callb
 Inline_Add = InlineKeyboardButton(text='Добавить ДЗ', callback_data='Inline_Add')
 Inline_Delete = InlineKeyboardButton(text='Удалить ДЗ', callback_data='Inline_Delete')
 Inline_Materials = InlineKeyboardButton(text='Добавить материалы', callback_data='Inline_Materials')
-Inline_Manage_Materials = InlineKeyboardButton(text='Управление материалами', callback_data='Inline_Manage_Materials')
-Inline_Manage.add(Inline_Add).add(Inline_Edit).add(Inline_Delete).add(Inline_Materials)
+Inline_Manage_Materials = InlineKeyboardButton(text='Удалить материалы', callback_data='Inline_Manage_Materials')
+Inline_Manage.add(Inline_Add).add(Inline_Edit).add(Inline_Delete).add(Inline_Materials).add(Inline_Manage_Materials)
 
 Inline_Date_ADD = InlineKeyboardMarkup()
 
@@ -66,6 +76,8 @@ Inline_Question_Why = InlineKeyboardButton(
     callback_data='Inline_Question_Why')
 Inline_About_Questions = InlineKeyboardMarkup()
 Inline_About_Questions.add(Inline_Question_Why)
+
+
 
 
 

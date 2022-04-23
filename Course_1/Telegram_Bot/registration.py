@@ -51,12 +51,22 @@ def register_cq_handlers(dp: Dispatcher):
 		state=SelfState.Groups_state
 	)
 	dp.register_callback_query_handler(answer_about_questions, text='Inline_Question_Why', state='*')
+	dp.register_callback_query_handler(delete_materials_state, text='Inline_Manage_Materials', state='*')
+	dp.register_callback_query_handler(delete_materials, state=SelfState.Delete_materials_state)
 
 
 def register_msg_handlers(dp: Dispatcher):
 	dp.register_message_handler(
 		processing_of_receiving_hw,
 		lambda message: message.text == 'Получить задание!',
+		state="*")
+	dp.register_message_handler(
+		process_rule_command,
+		lambda message: message.text == 'Управление заданиями',
+		state="*")
+	dp.register_message_handler(
+		process_get_materials,
+		lambda message: message.text == 'Полезные материалы',
 		state="*")
 	dp.register_message_handler(edit_homework, state=SelfState.Edit_state)
 	dp.register_message_handler(
@@ -67,15 +77,7 @@ def register_msg_handlers(dp: Dispatcher):
 		parse_attachments,
 		state=SelfState.Parse_state,
 		content_types=types.ContentType.DOCUMENT)
-	dp.register_message_handler(
-		process_rule_command,
-		lambda message: message.text == 'Управление заданиями',
-		state="*")
 
-	dp.register_message_handler(
-		process_get_materials,
-		lambda message: message.text == 'Полезные материалы',
-		state="*")
 	dp.register_message_handler(process_start_command, commands=['start'], state="*")
 	dp.register_message_handler(process_about_command, commands=['about'], state="*")
 	dp.register_message_handler(manual_input, state=SelfState.Manual_input_state)
