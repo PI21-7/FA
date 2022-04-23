@@ -115,14 +115,12 @@ async def process_get_materials(message: types.Message, state: FSMContext):
 			await message.answer(
 				text='*У нас не нашлось полезных материалов вашей группы.\nМожет их ещё не добавили?*',
 				parse_mode='markdown')
-		for pos, document in enumerate(attachments):
+		for document in attachments:
 			await bot.send_document(
 				chat_id=message.chat.id,
 				document=document[0],
 				caption=None,
 				parse_mode='markdown')
 	except aiogram.utils.exceptions.WrongFileIdentifier:
-		await message.answer(
-			text='*У нас не нашлось полезных материалов вашей группы.\nМожет их ещё не добавили?*',
-			parse_mode='markdown')
+		pass
 		

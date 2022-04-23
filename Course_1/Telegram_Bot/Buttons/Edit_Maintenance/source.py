@@ -30,6 +30,7 @@ async def editor_homework_date(query: types.CallbackQuery, state: FSMContext):
 				reply_markup=Inline_Date_ADD,
 				parse_mode="markdown"
 			)
+	SelfState.Edit_state.set()
 
 
 async def edit_homework(message: types.Message, state: FSMContext):

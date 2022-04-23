@@ -1,26 +1,6 @@
 import sqlite3
-import typing
 
 from typing import List, Tuple
-
-
-class DatabaseInterface(typing.Protocol):
-    class UsersDB(object):
-        def user_init(self): ...
-        def add_user(self): ...
-        def get_user_group(self): ...
-
-    class FilesDB(object):
-        def files_init(self): ...
-
-    def init(self): ...
-    def attach_file(self): ...
-    def is_file_attached(self): ...
-    def is_available_homework_by_date(self): ...
-    def is_exists(self): ...
-    def receive_homework(self): ...
-    def get_attachments(self): ...
-    def edit_homework(self): ...
 
 
 class Connections(object):
@@ -35,7 +15,7 @@ class Connections(object):
         return inside
 
 
-class Database(DatabaseInterface):
+class Database:
 
     @Connections.safe
     def add_user(self, connection: tuple, chat_id: str, user_group: str, username: str):
@@ -107,9 +87,16 @@ class Database(DatabaseInterface):
         connection.commit()
 
     @Connections.safe
+    def delete_material(self, connection: tuple, group: str, file_id: str):
+        connection, cursor = connection
+
+        cursor.execute('''DELETE FROM Materials WHERE file_id = ? AND group_name = ?;''', (file_id, group))
+        connection.commit()
+
+    @Connections.safe
     def is_file_attached_materials(self, connection: tuple, group: str, file_name: str):
         connection, cursor = connection
-        cursor = cursor.execute('''SELECT file_id FROM Materials WHERE group_name = ? and file_name = ?''', (group, file_name,))
+        cursor = cursor.execute('''SELECT file_id FROM Materials WHERE group_name = ? AND file_name = ?''', (group, file_name,))
         if cursor.fetchall():
             return False
         return True
@@ -149,7 +136,7 @@ class Database(DatabaseInterface):
     @Connections.safe
     def is_available_homework_by_date(self, connection: tuple, date: str, group: str, data=False):
         connection, cursor = connection
-        cursor = cursor.execute('''SELECT subject_id, text FROM Homework WHERE date = ? and "Group" = ?''',
+        cursor = cursor.execute('''SELECT subject_id, text FROM Homework WHERE date = ? AND "Group" = ?''',
                                 (date, group)).fetchall()
         connection.commit()
         if data:
@@ -163,7 +150,7 @@ class Database(DatabaseInterface):
     def is_exists(self, connection: tuple, subject_name: str, date: str, group: str):
         connection, cursor = connection
         cursor = cursor.execute(
-            '''SELECT subject_id and date FROM Homework WHERE subject_id = ? and date = ? and "Group" = ?''',
+            '''SELECT subject_id AND date FROM Homework WHERE subject_id = ? AND date = ? AND "Group" = ?''',
             (subject_name, date, group)).fetchall()
         connection.commit()
         if cursor:
@@ -174,7 +161,7 @@ class Database(DatabaseInterface):
     def receive_homework(self, connection: tuple, subject_name: str, date: str, group: str) -> str or List[Tuple[str]]:
         connection, cursor = connection
         answer = cursor.execute(
-            '''SELECT text FROM Homework WHERE subject_id = ? and date = ? and "Group" = ?''',
+            '''SELECT text FROM Homework WHERE subject_id = ? AND date = ? AND "Group" = ?''',
             (subject_name, date, group)).fetchall()
         connection.commit()
         if not answer:
@@ -184,7 +171,7 @@ class Database(DatabaseInterface):
     @Connections.safe
     def get_attachments(self, connection: tuple, date: str, group: str):
         connection, cursor = connection
-        cursor = cursor.execute('''SELECT ALL filename FROM Files WHERE Data = ? and group_name = ?''', (date, group))
+        cursor = cursor.execute('''SELECT ALL filename FROM Files WHERE Data = ? AND group_name = ?''', (date, group))
         connection.commit()
         return cursor.fetchall()
 
@@ -192,7 +179,7 @@ class Database(DatabaseInterface):
     def edit_homework(self, connection: tuple, subject_name: str, date: str, text: str, group: str):
         connection, cursor = connection
         cursor.execute(
-            '''UPDATE Homework SET text = ? WHERE subject_id = ? and date = ? and "Group" = ?;''',
+            '''UPDATE Homework SET text = ? WHERE subject_id = ? AND date = ? AND "Group" = ?;''',
             (text, subject_name, date, group)
         )
         connection.commit()
@@ -201,5 +188,5 @@ class Database(DatabaseInterface):
     def delete_homework(self, connection: tuple, subject_name: str, date: str, group: str) -> None:
         connection, cursor = connection
         cursor.execute('''
-        DELETE FROM Homework WHERE subject_id = ? and date = ? and "Group" = ?;''', (subject_name, date, group))
+        DELETE FROM Homework WHERE subject_id = ? AND date = ? AND "Group" = ?;''', (subject_name, date, group))
         connection.commit()

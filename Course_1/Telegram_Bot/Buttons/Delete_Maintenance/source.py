@@ -64,3 +64,44 @@ async def delete_homework_state(query: types.CallbackQuery, state: FSMContext):
 		parse_mode="markdown"
 	)
 	await SelfState.Delete_state.set()
+
+
+async def delete_materials_state(query: types.CallbackQuery, state: FSMContext):
+	await state.finish()
+	group = get_user_group(query.message)
+	materials = list(map(lambda x: x[0], HDB.get_attachments_materials(group=group)))
+	if not materials:
+		return await bot.edit_message_text(
+			chat_id=query.message.chat.id,
+			message_id=query.message.message_id,
+			text='*А нам нечего удалять 🙃*',
+			parse_mode="markdown")
+	await bot.edit_message_text(
+		chat_id=query.message.chat.id,
+		message_id=query.message.message_id,
+		text="*Какое задание будем удалять?*",
+		parse_mode="markdown"
+	)
+	for material in materials:
+		await bot.send_document(
+			chat_id=query.message.chat.id,
+			document=material,
+			caption=None,
+			parse_mode='markdown',
+			reply_markup=create_materials_keyboard((material,)))
+	await SelfState.Delete_materials_state.set()
+
+
+async def delete_materials(query: types.CallbackQuery, state: FSMContext):
+	await state.finish()
+	group = get_user_group(query.message)
+	materials = list(map(lambda x: x[0], HDB.get_attachments_materials(group=group)))
+	selected = None
+	for material in materials:
+		if query.data.lower() in material.lower():
+			selected = material
+			break
+	HDB.delete_material(group=group, file_id=selected)
+	await query.message.answer(
+		text=f'*Запись успешно удалена!*', parse_mode='markdown')
+

@@ -1,4 +1,5 @@
 class Debugger:
+    """The current conditions for launching the bot transfer logs to nohup.out"""
     debug = True
 
     @classmethod

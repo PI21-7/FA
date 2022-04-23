@@ -1,7 +1,7 @@
 ############################################
+from typing import List
 from Utils.Miscellaneous import *
 from registration import *
-from Utils.Phrases import *
 ############################################
 from Utils.debug import Debugger
 from aiogram import types
@@ -11,7 +11,7 @@ from aiogram.dispatcher import FSMContext
 
 
 @dp.message_handler(state=SelfState.Materials_parse_state, content_types=types.ContentType.DOCUMENT)
-async def parse_attachments(message: types.Message, state: FSMContext):
+async def parse_attachments(message: types.Message):
 	HDB.attach_file_materials(
 		file_id=message.document.file_id,
 		file_name=message.document.file_name,
@@ -27,35 +27,48 @@ async def process_add_material_command(message: types.Message, state: FSMContext
 			file_id=message.document.file_id,
 			group=get_user_group(message),
 			file_name=message.document.file_name)
-		await message.answer(Mat_added, parse_mode='markdown')
+		await message.answer("*Материалы добавлены*", parse_mode='markdown')
 	else:
-		await message.answer(Mat_already, parse_mode='markdown')
+		await message.answer("*Этот файл уже добавлен!*", parse_mode='markdown')
 
 
 @dp.message_handler(state=SelfState.Materials_state)
 async def process_answer_by_document(message: types.Message, state: FSMContext):
 	await state.finish()
-	await message.answer(Mat_wrong, parse_mode='markdown')
+	await message.answer("*Надо было отправить просто файл*😭", parse_mode='markdown')
 
 
 @dp.callback_query_handler(text='Inline_Materials')
-async def materials_state(call: types.CallbackQuery, state: FSMContext):
+async def materials_state(query: types.CallbackQuery, state: FSMContext):
 	await state.finish()
-	await bot.send_message(
-			chat_id=call.message.chat.id,
-			text=Mat_attach,
-			parse_mode="markdown"
-		)
+	await bot.edit_message_text(
+		chat_id=query.message.chat.id,
+		message_id=query.message.message_id,
+		text="*Прикрепите материалы*\n\n*Постарайтесь давать файлам название,* "
+			 "`отчетливо` *дающее понять содержание и назначение файла*",
+		parse_mode="markdown"
+	)
 	await SelfState.Materials_state.set()
 
 
-def __sys_arguments(*args, **_kwargs):
+def __sys_arguments(*args: List[str], **_kwargs) -> None:
+	"""
+	Synology run commands:
+		1) Telegram_bot -> nohup nice -n -15 python bot.py
+		2) Admin_bot -> nohup nice -n 0 python bot.py
+	commands:
+		nohup: to pass shutting down due to breaking SSH tunnel.
+		nice: to run file with priority you need.
+	:param args: List
+	:param _kwargs: Dict
+	:return: None
+	"""
 	for argument in args[1:]:
 		if argument == '-i' or argument == '--init':
-			HDB.init()  # Инициализация базы данных (Только при первом запуске)
+			HDB.init()  # Инициализация базы данных (Только при первом запуске бота)
 			continue
 		if argument == '-s' or argument == '--silent':
-			Debugger.debug = False  # Вывод в консоль (Логов в Nohup.out не будет)
+			Debugger.debug = False  # Вывод в консоль | (Логов в Nohup.out не будет)
 			continue
 		else:
 			exit(f'Unknown argument --> "{argument}"')
