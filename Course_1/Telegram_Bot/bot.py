@@ -64,12 +64,14 @@ def __sys_arguments(*args: List[str], **_kwargs) -> None:
 	:return: None
 	"""
 	for argument in args[1:]:
-		if argument == '-i' or argument == '--init':
+		if argument in ('-i', '--init'):
 			HDB.init()  # Инициализация базы данных (Только при первом запуске бота)
 			continue
-		if argument == '-s' or argument == '--silent':
+		if argument in ('-s', '--silent'):
 			Debugger.debug = False  # Вывод в консоль | (Логов в Nohup.out не будет)
 			continue
+		if argument in ('-t', '-telegram'):
+			Debugger.bot = admin_bot
 		else:
 			exit(f'Unknown argument --> "{argument}"')
 

@@ -43,7 +43,7 @@ async def delete_homework(query: types.CallbackQuery, state: FSMContext):
 			subject = schedule[pos]
 			break
 	group = get_user_group(message)
-	Debugger.info(message.from_user.username, 'удалил', ' '.join([subject, date, group]))
+	await Debugger.info(message.from_user.username, 'удалил', ' '.join([subject, date, group]))
 	HDB.delete_homework(subject_name=subject, date=date, group=group)
 	await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
 	await message.answer(

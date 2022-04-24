@@ -5,7 +5,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters.state import StatesGroup, State
 
 from Utils.Schedule import *
-from config import TOKEN
+from config import *
 from Database import Database
 
 
@@ -13,23 +13,24 @@ sys.path.append("..")
 
 
 class SelfState(StatesGroup):
-	Faculty_state = State()
-	Group_state = State()
-	Groups_state = State()
-	Add_state = State()
-	Edit_state = State()
-	Delete_state = State()
-	Parse_state = State()
-	Materials_state = State()
-	Materials_parse_state = State()
-	Manual_input_state = State()
-	Delete_materials_state = State()
+	Faculty_state 			= State()
+	Group_state 			= State()
+	Groups_state 			= State()
+	Add_state 				= State()
+	Edit_state 				= State()
+	Delete_state 			= State()
+	Parse_state 			= State()
+	Materials_state 		= State()
+	Materials_parse_state 	= State()
+	Manual_input_state 		= State()
+	Delete_materials_state 	= State()
 
 
-storage = MemoryStorage()
-bot = Bot(token=TOKEN)
-dp = Dispatcher(bot, storage=storage)
-HDB = Database()
+storage 	= MemoryStorage()
+bot 		= Bot(token=TOKEN)
+admin_bot 	= Bot(token=ADMIN_BOT_TOKEN)
+dp 			= Dispatcher(bot, storage=storage)
+HDB 		= Database()
 
 days_of_week = {
 	1: 'Понедельник',
