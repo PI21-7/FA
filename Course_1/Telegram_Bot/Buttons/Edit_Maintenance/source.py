@@ -30,7 +30,7 @@ async def editor_homework_date(query: types.CallbackQuery, state: FSMContext):
 				reply_markup=Inline_Date_ADD,
 				parse_mode="markdown"
 			)
-	SelfState.Edit_state.set()
+	await SelfState.Edit_state.set()
 
 
 async def edit_homework(message: types.Message, state: FSMContext):
@@ -89,4 +89,4 @@ async def editor_add_homework_subject(query: types.CallbackQuery, state: FSMCont
 			text=f'*Введите новое задание*',
 			parse_mode='markdown')
 	except KeyError as e:
-		Debugger.error(e)
+		await Debugger.error(e)

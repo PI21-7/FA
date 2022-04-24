@@ -30,7 +30,7 @@ async def add_homework(message: types.Message, state: FSMContext):
 		return Ellipsis
 
 	text = message.text
-	Debugger.info(message.from_user.username, 'добавил', text if text is not None else message.caption)
+	await Debugger.info(message.from_user.username, 'добавил', text if text is not None else message.caption)
 	user_group = get_user_group(message)
 	exercise = text
 	if message.document is not None and message.document.file_id is not None:
@@ -55,7 +55,7 @@ async def add_homework(message: types.Message, state: FSMContext):
 	try:
 		await bot.delete_message(message.chat.id, message_id=message.message_id - 1)
 	except MessageToDeleteNotFound:
-		Debugger.error('Какое-то сообщение не удаляется(')
+		await Debugger.error('Какое-то сообщение не удаляется(')
 
 
 async def parse_attachments(message: types.Message, state: FSMContext):
@@ -92,7 +92,7 @@ async def adding_add_homework_subject(query: types.CallbackQuery, state: FSMCont
 			reply_markup=Inline_Date_ADD,
 			parse_mode='markdown')
 	except KeyError as e:
-		Debugger.error(e)
+		await Debugger.error(e)
 
 
 async def add_homework_date(query: types.CallbackQuery, state: FSMContext):

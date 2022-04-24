@@ -7,6 +7,8 @@ async def process_start_command(message: types.Message):
     await message.answer(
         text="*Привет!\nДавай сначала найдем твой факультет?*",
         parse_mode='markdown', reply_markup=create_faculties_keyboard(Groups.get_faculties_list()))
+    global __user
+    __user = message.from_user.username
     await SelfState.Faculty_state.set()
 
 
@@ -24,6 +26,7 @@ async def manual_input(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     user_group = message.text
     await bot.delete_message(message.chat.id, message_id=message.message_id - 1)
+    await Debugger.info(message.from_user.username, 'зарегистрировался', f'\nгруппа {user_group}')
     await message.answer(f"Отлично!\nМы записали что ты из группы *{user_group}*.\n"
                          f"Нажми на кнопку, чтобы получить домашнее задание!",
                          reply_markup=answer_start, parse_mode='markdown')
@@ -63,7 +66,6 @@ async def groups_state_command(query: types.CallbackQuery, state: FSMContext):
 
 
 async def group_state_command(query: types.CallbackQuery, state: FSMContext):
-    await state.finish()
     message = query.message
     chat_id = message.chat.id
     user_group = translit(query.data, language_code='ru').upper()
@@ -71,7 +73,9 @@ async def group_state_command(query: types.CallbackQuery, state: FSMContext):
     await message.answer(f"Отлично!\nМы записали что ты из группы *{user_group}*.\n"
                          f"Нажми на кнопку, чтобы получить домашнее задание!",
                          reply_markup=answer_start, parse_mode='markdown')
-    HDB.add_user(chat_id=chat_id, user_group=user_group, username=message.from_user.username)
+    await Debugger.info(__user, 'зарегистрировался', f'группа {user_group}')
+    HDB.add_user(chat_id=chat_id, user_group=user_group, username=__user)
+    await state.finish()
 
 
 async def process_about_command(message: types.Message):  # If IDE marks it's as error (below), you can **** it away.

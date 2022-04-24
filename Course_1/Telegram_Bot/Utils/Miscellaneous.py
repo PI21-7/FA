@@ -5,7 +5,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters.state import StatesGroup, State
 
 from Utils.Schedule import *
-from config import TOKEN
+from config import *
 from Database import Database
 
 
@@ -26,10 +26,11 @@ class SelfState(StatesGroup):
 	Delete_materials_state 	= State()
 
 
-storage = MemoryStorage()
-bot 	= Bot(token=TOKEN)
-dp 		= Dispatcher(bot, storage=storage)
-HDB 	= Database()
+storage 	= MemoryStorage()
+bot 		= Bot(token=TOKEN)
+admin_bot 	= Bot(token=ADMIN_BOT_TOKEN)
+dp 			= Dispatcher(bot, storage=storage)
+HDB 		= Database()
 
 days_of_week = {
 	1: 'Понедельник',

@@ -42,7 +42,7 @@ async def process_rule_command(message: types.Message, state: FSMContext):
 	await state.finish()
 	async with state.proxy() as data:
 		data['date_count'] = 0
-	Debugger.info(message.from_user.username, 'управляет заданиями')
+	await Debugger.info(message.from_user.username, 'управляет заданиями')
 	if message.from_user.username in green_list():
 		await message.answer(
 			text='*Что будем делать?*',
