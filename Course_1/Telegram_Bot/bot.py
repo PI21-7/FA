@@ -56,9 +56,12 @@ def __sys_arguments(*args: List[str], **_kwargs) -> None:
 	Synology run commands:
 		1) Telegram_bot -> nohup nice -n -15 python bot.py -t
 		2) Admin_bot -> nohup nice -n 0 python bot.py
+	Synology SD commands:
+		1) sudo killall python
 	commands:
 		nohup: to pass shutting down due to breaking SSH tunnel.
 		nice: to run file with priority you need.
+		killall: ? idk
 	:param args: List
 	:param _kwargs: Dict
 	:return: None
