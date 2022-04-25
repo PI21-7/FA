@@ -79,7 +79,7 @@ async def delete_materials_state(query: types.CallbackQuery, state: FSMContext):
 	await bot.edit_message_text(
 		chat_id=query.message.chat.id,
 		message_id=query.message.message_id,
-		text="*Какое задание будем удалять?*",
+		text="*Что будем удалять?*",
 		parse_mode="markdown"
 	)
 	for material in materials:
