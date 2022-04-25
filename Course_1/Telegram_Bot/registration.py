@@ -58,7 +58,7 @@ def register_cq_handlers(dp: Dispatcher):
 def register_msg_handlers(dp: Dispatcher):
 	dp.register_message_handler(
 		processing_of_receiving_hw,
-		lambda message: message.text == 'Получить задание!',
+		lambda message: message.text == 'Получить задание',
 		state="*")
 	dp.register_message_handler(
 		process_rule_command,
@@ -66,7 +66,7 @@ def register_msg_handlers(dp: Dispatcher):
 		state="*")
 	dp.register_message_handler(
 		process_get_materials,
-		lambda message: message.text == 'Полезные материалы',
+		lambda message: message.text == 'Полезные материалы группы',
 		state="*")
 	dp.register_message_handler(edit_homework, state=SelfState.Edit_state)
 	dp.register_message_handler(

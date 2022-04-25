@@ -11,3 +11,4 @@ def week_definition(count, debug=False):
     if debug:
         return start_date
     return start_date.strftime("%d.%m.%y"), end_date.strftime("%d.%m.%y")
+

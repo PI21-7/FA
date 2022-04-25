@@ -41,7 +41,9 @@ def create_faculties_keyboard(array: Iterable):
     return keyboard_inline_buttons.add(Manual)
 
 
-answer_start = ReplyKeyboardMarkup(resize_keyboard=True).add("Получить задание!").add('Управление заданиями').add('Полезные материалы')
+answer_start = ReplyKeyboardMarkup(resize_keyboard=True).add("Получить задание").insert('Управление заданиями').\
+    add('Полезные материалы группы').insert("Полезные материалы направления")
+
 Inline_Date = InlineKeyboardMarkup(inline_keyboard=True, row_width=3)
 Inline_Date_Week = InlineKeyboardButton(text='Вся неделя 🥶', callback_data='Inline_Date_Week')
 Inline_Date_Bm = InlineKeyboardButton(text='Понедельник 💀', callback_data='Inline_Date_Bm')

@@ -15,7 +15,8 @@ class Connections(object):
         return inside
 
 
-class Database:
+class Database(object):
+    """Управляем базой данных как гении"""
 
     @Connections.safe
     def add_user(self, connection: tuple, chat_id: str, user_group: str, username: str):
@@ -38,8 +39,9 @@ class Database:
 
     @Connections.safe
     def init(self, connection: tuple) -> None:
+        """Инициализация БД, пиво, инициализация БД"""
         connection, cursor = connection
-        print('Creating "Homework" Table')
+        print('Creating "Homework" Table...')
         cursor.execute(
             f'create table if not exists Homework('
             f'id         INTEGER primary key,'
@@ -49,7 +51,7 @@ class Database:
             f'"Group"    text not null,'
             f'Author     text not null)'
         )
-        print('Creating "Files" Table')
+        print('Creating "Files" Table...')
         cursor.execute('''
         create table if not exists Files
         (
@@ -59,14 +61,14 @@ class Database:
             group_name TEXT
         );
         ''')
-        print('Creating "Users" Table')
+        print('Creating "Users" Table...')
         cursor.execute('''create table if not exists Users (
         id          INTEGER primary key,
         chat_id     TEXT not null,
         user_group  TEXT not null,
         username  TEXT not null
         )''')
-        print('Creating "Materials" Table')
+        print('Creating "Materials" Table...')
         cursor.execute('''
         create table if not exists Materials
         (
