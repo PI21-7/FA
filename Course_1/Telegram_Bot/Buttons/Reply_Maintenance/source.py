@@ -1,4 +1,3 @@
-# noinspection INSPECTION_NAME
 import aiogram.utils.exceptions
 from Buttons.__modules__ import *
 
@@ -115,12 +114,13 @@ async def process_get_materials(message: types.Message, state: FSMContext):
 			await message.answer(
 				text='*У нас не нашлось полезных материалов вашей группы.\nМожет их ещё не добавили?*',
 				parse_mode='markdown')
-		for document in attachments:
-			await bot.send_document(
-				chat_id=message.chat.id,
-				document=document[0],
-				caption=None,
-				parse_mode='markdown')
+		else:
+			for document in attachments:
+				await bot.send_document(
+					chat_id=message.chat.id,
+					document=document[0],
+					caption=None,
+					parse_mode='markdown')
 	except aiogram.utils.exceptions.WrongFileIdentifier:
-		pass
+		print('бля')
 		
