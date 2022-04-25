@@ -80,6 +80,7 @@ def register_msg_handlers(dp: Dispatcher):
 
 	dp.register_message_handler(process_start_command, commands=['start'], state="*")
 	dp.register_message_handler(process_about_command, commands=['about'], state="*")
+	dp.register_message_handler(process_warnings_command, commands=['warnings'], state='*')
 	dp.register_message_handler(manual_input, state=SelfState.Manual_input_state)
 
 
