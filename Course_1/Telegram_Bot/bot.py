@@ -1,28 +1,12 @@
 """
-----------------------------------------------------
-| DOCUMENTATION LANGUAGE || RU & ENG   			   |
-| Created by Nps-rf 	   || 03.03.2022		   |
-| Edited by Nps-rf	   || 26.04.2022			   |
-| Email				   || Divine.Nikolai@Gmail.com |
-----------------------------------------------------
-——————————No Kyiv?—————————————
-⠀⣞⢽⢪⢣⢣⢣⢫⡺⡵⣝⡮⣗⢷⢽⢽⢽⣮⡷⡽⣜⣜⢮⢺⣜⢷⢽⢝⡽⣝
-⠸⡸⠜⠕⠕⠁⢁⢇⢏⢽⢺⣪⡳⡝⣎⣏⢯⢞⡿⣟⣷⣳⢯⡷⣽⢽⢯⣳⣫⠇
-⠀⠀⢀⢀⢄⢬⢪⡪⡎⣆⡈⠚⠜⠕⠇⠗⠝⢕⢯⢫⣞⣯⣿⣻⡽⣏⢗⣗⠏⠀
-⠀⠪⡪⡪⣪⢪⢺⢸⢢⢓⢆⢤⢀⠀⠀⠀⠀⠈⢊⢞⡾⣿⡯⣏⢮⠷⠁⠀⠀
-⠀⠀⠀⠈⠊⠆⡃⠕⢕⢇⢇⢇⢇⢇⢏⢎⢎⢆⢄⠀⢑⣽⣿⢝⠲⠉⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⡿⠂ru⡇⢇⠕⢈⣀⠀⠁⠡⠣⡣⡫⣂⣿⠯⢪⠰⠂⠀⠀⠀⠀
-⠀⠀⠀⠀⡦⡙⡂⢀⢤⢣⠣⡈⣾⡃⠠ru⡄⢱⣌⣶⢏⢊⠂⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⢝⡲⣜⡮⡏⢎⢌⢂⠙⠢⠐⢀⢘⢵⣽⣿⡿⠁⠁⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠨⣺⡺⡕⡕⡱⡑⡆⡕⡅⡕⡜⡼⢽⡻⠏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⣼⣳⣫⣾⣵⣗⡵⡱⡡⢣⢑⢕⢜⢕⡝⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⣴⣿⣾⣿⣿⣿⡿⡽⡑⢌⠪⡢⡣⣣⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⡟⡾⣿⢿⢿⢵⣽⣾⣼⣘⢸⢸⣞⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠁⠇⠡⠩⡫⢿⣝⡻⡮⣒⢽⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-———————————————————————————
+------------------------------------------------------
+| DOCUMENTATION LANGUAGE || RU & ENG   			     |
+| Created by Nps-rf 	 || 03.03.2022		   	     |
+| Edited by Nps-rf	     || 26.04.2022			     |
+| Email				     || Divine.Nikolai@Gmail.com |
+------------------------------------------------------
 """
 ############################################
-from typing import List
 from Utils.Miscellaneous import *
 from registration import *
 ############################################
@@ -74,7 +58,20 @@ async def materials_state(query: types.CallbackQuery, state: FSMContext):
 	await SelfState.Materials_state.set()
 
 
-def __sys_arguments(*args: List[str], **_kwargs) -> None:
+async def __send_info_for_users__(important: bool = False):
+	UID_s = list(map(lambda x: x[0], HDB.all_users()))
+	for UID in UID_s:
+		try:
+			await bot.send_message(
+				chat_id=None,
+				text=None,
+				parse_mode='markdown',
+				disable_notification=not important)
+		except Exception as e:
+			sys.stdout.write(f'{e} {UID}')
+
+
+async def __sys_arguments(*_) -> None:
 	"""
 	Synology run commands:
 		1) Telegram_bot -> nohup nice -n -15 python bot.py -t
@@ -85,24 +82,24 @@ def __sys_arguments(*args: List[str], **_kwargs) -> None:
 		nohup: to pass shutting down due to breaking SSH tunnel.
 		nice: to run file with priority you need.
 		killall: ? idk
-	:param args: List
-	:param _kwargs: Dict
 	:return: None
 	"""
-	for argument in args[1:]:
+	for argument in sys.argv[1:]:
 		if argument in ('-i', '--init'):
 			HDB.init()  # Инициализация базы данных (Только при первом запуске бота)
 			continue
-		if argument in ('-s', '--silent'):
+		elif argument in ('-s', '--silent'):
 			Debugger.debug = False  # Вывод в консоль | (Логов в Nohup.out не будет)
 			continue
-		if argument in ('-t', '-telegram'):
+		elif argument in ('-t', '--telegram'):
 			Debugger.bot = admin_bot
+		elif argument in ('-n', '--notice'):
+			await __send_info_for_users__()
+			continue
 		else:
 			exit(f'Unknown argument --> "{argument}"')
 
 
 if __name__ == '__main__':
-	__sys_arguments(*sys.argv)
 	overall_handlers_registration(dp)
-	executor.start_polling(dp, skip_updates=True)
+	executor.start_polling(dp, skip_updates=True, on_startup=__sys_arguments)

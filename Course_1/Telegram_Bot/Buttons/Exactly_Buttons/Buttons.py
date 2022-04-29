@@ -42,7 +42,7 @@ def create_faculties_keyboard(array: Iterable):
 
 
 answer_start = ReplyKeyboardMarkup(resize_keyboard=True).add("Получить задание").insert('Управление заданиями').\
-    add('Полезные материалы группы').insert("Полезные материалы направления")
+    add('Полезные материалы группы')#.insert("Полезные материалы направления")
 
 Inline_Date = InlineKeyboardMarkup(inline_keyboard=True, row_width=3)
 Inline_Date_Week = InlineKeyboardButton(text='Вся неделя 🥶', callback_data='Inline_Date_Week')

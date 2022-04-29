@@ -2,7 +2,7 @@ import string
 
 import requests
 
-from ast import literal_eval
+from ast import literal_eval as _lit_ev
 
 
 class Groups:
@@ -81,14 +81,14 @@ class Groups:
         result = list()
         with open(path, 'r', encoding='utf-8') as file:
             for row in file.readlines():
-                result.append(literal_eval(row))
+                result.append(_lit_ev(row))
         return result
 
     @staticmethod
     def clean_log(path: str = 'Utils/Groups.txt'):
         with open(path, 'r+', encoding='utf-8') as file:
             for row in file.readlines():
-                result = literal_eval(row)
+                result = _lit_ev(row)
                 for group in result[1]:
                     print(group)
                     from Schedule import Schedule
@@ -101,7 +101,7 @@ class Groups:
     def clean_group_types(cls, path: str = 'Utils/Groups.txt'):
         with open(path, 'r+', encoding='utf-8') as file:
             for row in file.readlines():
-                result = list(literal_eval(row))
+                result = list(_lit_ev(row))
                 initials = cls.get_groups_types(result[1])
                 for initial in initials:
                     from transliterate import translit

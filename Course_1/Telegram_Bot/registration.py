@@ -1,8 +1,8 @@
-from aiogram import Dispatcher
+from aiogram import Dispatcher as _Dispatcher
 from Buttons.Maintenance import *
 
 
-def register_cq_handlers(dp: Dispatcher):
+def register_cq_handlers(dp: _Dispatcher):
 	dp.register_callback_query_handler(callback=callback_up, text='Inline_Date_Up', state='*')
 	dp.register_callback_query_handler(callback=callback_down, text='Inline_Date_Down', state='*')
 	dp.register_callback_query_handler(callback=all_week_homework, text='Inline_Date_Week', state='*')
@@ -55,7 +55,7 @@ def register_cq_handlers(dp: Dispatcher):
 	dp.register_callback_query_handler(delete_materials, state=SelfState.Delete_materials_state)
 
 
-def register_msg_handlers(dp: Dispatcher):
+def register_msg_handlers(dp: _Dispatcher):
 	dp.register_message_handler(
 		processing_of_receiving_hw,
 		lambda message: message.text == 'Получить задание',
@@ -84,6 +84,6 @@ def register_msg_handlers(dp: Dispatcher):
 	dp.register_message_handler(manual_input, state=SelfState.Manual_input_state)
 
 
-def overall_handlers_registration(dp: Dispatcher):
+def overall_handlers_registration(dp: _Dispatcher):
 	register_cq_handlers(dp)
 	register_msg_handlers(dp)
