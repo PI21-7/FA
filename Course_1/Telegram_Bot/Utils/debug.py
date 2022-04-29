@@ -1,5 +1,3 @@
-import sys as _sys
-
 from config import ADMIN
 
 
@@ -19,7 +17,7 @@ class Debugger:
             data = f'\n--> {data}'
         out = f'{user} {action}{data}'
         if cls.bot is None:
-            _sys.stdout.write(out)
+            print(out)
         else:
             await cls.bot.send_message(
                 chat_id=ADMIN,
@@ -32,10 +30,32 @@ class Debugger:
         if not cls.debug:
             return ...
         if cls.bot is None:
-            _sys.stdout.write(data)
+            print(data)
         else:
             await cls.bot.send_message(
                 chat_id=ADMIN,
                 text='`⚡⚡ ERROR:`\n' + f'*{data}*',
                 parse_mode='markdown'
             )
+
+
+'''
+    С удовольствием пишу для вас обновы!   
+    ⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠁⠄⣠⣶⣾⣿⣿⣿⣿⣿⣿⣷⣶⣄⡀⠄⠄⠄⠄⠄
+    ⣿⣿⣿⣿⣿⣿⣿⣿⠃⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⠄⠄⠄⠄
+    ⣿⣿⣿⣿⣿⣿⣿⠏⣠⡾⠛⠛⠛⠻⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⠄⠄
+    ⣿⣿⣿⣿⣿⣿⠏⣼⣿⣶⣿⣿⣦⣤⣀⣠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⡀
+    ⣿⣿⣿⣿⣿⡏⣼⣿⡿⠿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡏⠉⠛⠻⣿⣿⣿⣿⣿⡷
+    ⣿⣿⣿⣿⡏⣾⣿⣿⣿⣷⣶⣤⣤⣽⣿⣿⣿⣿⣿⣿⣿⣇⠄⠄⠈⢿⣿⣿⣿⡇
+    ⣿⣿⣿⢣⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣟⣻⣿⣿⣿⣷⣦⡀⠛⣿⣿⠃
+    ⣿⣿⢋⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣍⠻⢿⣿⣿⣷⠄⣸⣿⠄
+    ⣿⣿⣼⣿⣿⣿⣿⣿⣿⣿⣇⣤⣿⡟⠻⣿⣿⣿⣿⣿⣿⣷⣤⣽⣿⣿⣿⣿⣿⠄
+    ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢶⡿⢹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠇⠄
+    ⣿⣿⣿⣿⣿⣿⣿⡿⠿⠿⣿⣿⣿⣿⣷⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡏⠄⠄
+    ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣬⣍⠛⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠁⠄⠄
+    ⡏⡿⣿⣿⣿⣿⣿⣿⣏⣁⡹⠿⣿⣤⣙⣿⣿⣿⣿⣿⣿⣿⣿⣿⡟⠁⠄⠄⠄⠘
+    ⡇⠻⠿⣿⣿⣿⣿⣿⣿⣿⣿⣧⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢿⡇⠄⠄⠄⠄⢀
+    ⣿⠄⠄⠉⠉⠻⣿⣿⣿⣿⡝⠻⣿⢛⡛⠻⣿⣿⣿⣿⣿⣿⡿⣆⠑⢎⠄⢀⡃⣼
+'''
+
+

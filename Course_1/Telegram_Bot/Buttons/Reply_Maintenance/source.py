@@ -122,5 +122,5 @@ async def process_get_materials(message: types.Message, state: FSMContext):
 					caption=None,
 					parse_mode='markdown')
 	except aiogram.utils.exceptions.WrongFileIdentifier:
-		print('бля')
+		print('Да это жестко')
 		

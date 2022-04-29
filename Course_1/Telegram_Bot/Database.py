@@ -16,6 +16,7 @@ class Connections(object):
 
 
 class Database(object):
+    """Управляем базой данных как гении"""
 
     @Connections.safe
     def all_users(self, connection):
@@ -36,7 +37,7 @@ class Database(object):
             cursor.execute('''INSERT INTO Users (chat_id, user_group, username) VALUES (?, ?, ?)''',
                            (chat_id, user_group.upper(), username))
 
-        return connection.commit()
+        connection.commit()
 
     @Connections.safe
     def get_user_group(self, connection: tuple, chat_id: str) -> str:
@@ -47,6 +48,7 @@ class Database(object):
 
     @Connections.safe
     def init(self, connection: tuple) -> None:
+        """Инициализация БД, пиво, инициализация БД"""
         connection, cursor = connection
         print('Creating "Homework" Table...')
         cursor.execute(
@@ -86,21 +88,21 @@ class Database(object):
         );
         ''')
 
-        return connection.commit()
+        connection.commit()
 
     @Connections.safe
     def attach_file_materials(self, connection: tuple, file_id: str, group: str, file_name: str):
         connection, cursor = connection
 
         cursor.execute('''INSERT INTO Materials (FILE_ID, GROUP_NAME, FILE_NAME) VALUES (?, ?, ?)''', (file_id, group, file_name,))
-        return connection.commit()
+        connection.commit()
 
     @Connections.safe
     def delete_material(self, connection: tuple, group: str, file_id: str):
         connection, cursor = connection
 
         cursor.execute('''DELETE FROM Materials WHERE file_id = ? AND group_name = ?;''', (file_id, group))
-        return connection.commit()
+        connection.commit()
 
     @Connections.safe
     def is_file_attached_materials(self, connection: tuple, group: str, file_name: str):
@@ -122,7 +124,7 @@ class Database(object):
         connection, cursor = connection
 
         cursor.execute('''INSERT INTO Files (DATA, FILENAME, GROUP_NAME) VALUES (?, ?, ?)''', (date, filename, group))
-        return connection.commit()
+        connection.commit()
 
     @Connections.safe
     def is_file_attached(self, connection: tuple, date: str, group: str):
@@ -191,11 +193,11 @@ class Database(object):
             '''UPDATE Homework SET text = ? WHERE subject_id = ? AND date = ? AND "Group" = ?;''',
             (text, subject_name, date, group)
         )
-        return connection.commit()
+        connection.commit()
 
     @Connections.safe
     def delete_homework(self, connection: tuple, subject_name: str, date: str, group: str) -> None:
         connection, cursor = connection
         cursor.execute('''
         DELETE FROM Homework WHERE subject_id = ? AND date = ? AND "Group" = ?;''', (subject_name, date, group))
-        return connection.commit()
+        connection.commit()
